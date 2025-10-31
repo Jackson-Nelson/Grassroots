@@ -16,11 +16,13 @@ app.use(express.json());
 // Database connection
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
+  port: process.env.DB_PORT || 2931,
   database: process.env.DB_NAME || 'group_app',
   user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'password',
+  password: process.env.DB_PASSWORD || 'hello',
 });
+
+console.log("PASSWORD= " + pool.options.password)
 
 // Authentication middleware
 const authenticateToken = (req, res, next) => {
