@@ -1,15 +1,24 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-* {margin: 15px; padding: 10px; border-style: solid ; border-radius: 10px; border: 2px black; }
-App {
-  background: grey;
+
+#main_nav {
+  gap:10px;
+  display: flex;
+
+  color: blue;
+  text-decoration: underline;
 }
 
-form > *{
+Form > * {
   background: linear-gradient(to right, green, rgb(115, 255, 0));
+  margin: 15px;
+  padding: 10px;
+  border-style: solid;
+  border-radius: 10px;
+  border: 2px black;
+
 }
 
 body {

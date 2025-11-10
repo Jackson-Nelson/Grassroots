@@ -10,7 +10,7 @@ import Groups from './components/pages/Groups.jsx'
 function App() {
   return (
     <Router>
-      <nav className="bg-green">
+      <nav id="main_nav" className="bg-green">
         <Link className="nav-link" to='/home'>home</Link>
         <Link className="nav-link" to='/groups'>groups</Link>
         <Link className="nav-link" to='/sign-in'>sign-in</Link>
