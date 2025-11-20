@@ -7,6 +7,8 @@ const {Pool} = require('pg')
 
 const app = express()
 
+
+// Middleware
 app.use(express.json())
 app.use(cors())
 
@@ -17,7 +19,6 @@ const pool = new Pool({
   host:process.env.DB_HOST,
   port:process.env.DB_PORT,
   database:process.env.DB_NAME,
-
 })
 
 
@@ -69,5 +70,26 @@ app.post("/api/login", async (req, res)=>{
     res.send("User logged in successfully");
 })
 
+// event routes
+app.get("/api/events/nearby", async (req, res)=>{
+  const {city, state, zip, country} = req.query
+  const events = await pool.query('SELECT * FROM events WHERE city = $1 AND state = $2 AND zip = $3 AND country = $4', [city, state, zip, country])
+  res.json(events.rows)
+});
+
+
+// group routes
+app.get("/api/groups/my-groups", async (req, res)=>{
+  const {user_id} = req.query
+  // Get groups where user is a member OR where user is the creator
+  const groups = await pool.query(
+    `SELECT DISTINCT g.* 
+     FROM groups g 
+     LEFT JOIN group_members gm ON g.group_id = gm.group_id 
+     WHERE gm.user_id = $1 OR g.creator_id = $1`, 
+    [user_id]
+  )
+  res.json(groups.rows)
+});
 
 app.listen(process.env.PORT, ()=>console.log("Server listening on localhost:4000"))
