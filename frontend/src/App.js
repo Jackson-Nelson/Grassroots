@@ -1,7 +1,7 @@
 import React from "react";
 import { Auth } from "./components/login.js"
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
-import Homepage from './components/pages/Homepage.js'
+import Homepage from './components/pages/Homepage.jsx'
 import Groups from './components/pages/Groups.jsx'
 
 

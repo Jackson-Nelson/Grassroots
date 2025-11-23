@@ -9,7 +9,11 @@ CREATE TABLE users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(100),
-    location VARCHAR(255) NOT NULL,
+    city VARCHAR(255) NOT NULL,
+    county VARCHAR(255),
+    state VARCHAR(255),
+    zip INTEGER,
+    country VARCHAR(255) NOT NULL,
     bio TEXT,
     avatar_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -23,7 +27,11 @@ CREATE TABLE groups (
     group_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description TEXT,
-    location VARCHAR(255) NOT NULL,
+    city VARCHAR(255) NOT NULL,
+    county VARCHAR(255),
+    state VARCHAR(255),
+    zip INTEGER,
+    country VARCHAR(255) NOT NULL,
     creator_id INTEGER NOT NULL,
     avatar_url VARCHAR(500),
     is_private BOOLEAN DEFAULT FALSE,
@@ -54,7 +62,12 @@ CREATE TABLE events (
     description TEXT,
     event_date DATE NOT NULL,
     event_time TIME,
-    location VARCHAR(255),
+    address VARCHAR(255) NOT NULL,
+    city VARCHAR(255) NOT NULL,
+    county VARCHAR(255),
+    state VARCHAR(255),
+    zip INTEGER,
+    country VARCHAR(255) NOT NULL,
     is_cancelled BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -86,3 +99,15 @@ CREATE TABLE messages (
     FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
+-- EXAMPLE DATA
+
+-- USERS
+INSERT INTO users (user_id, username, email, password_hash, full_name, city, county, state, zip, country, bio) VALUES (1, 'celina', 'test@example.com', 'password', 'celina vo', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', 'This is my test biography');
+
+-- GROUPS
+INSERT INTO groups (group_id, name, description, city, county, state, zip, country, creator_id) VALUES (1, 'Climate Action Bellingham', 'A climate activism group based in Bellingham, WA.', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', 1);
+INSERT INTO groups (group_id, name, description, city, county, state, zip, country, creator_id) VALUES (2, 'Test Group', 'A Test Group From Bham', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', 1);
+
+-- EVENTS
+INSERT INTO events (event_id, group_id, creator_id, title, description, event_date, event_time, address, city, county, state, zip, country, is_cancelled) VALUES (1, 1, 1, 'Climate Action Bellingham Meeting', 'A meeting to discuss climate action in Bellingham, WA.', '2025-12-01', '10:00:00', '123 Main St', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', FALSE);
+INSERT INTO events (event_id, group_id, creator_id, title, description, event_date, event_time, address, city, county, state, zip, country, is_cancelled) VALUES (2, 2, 1, 'Test Event', 'A Test Event From Bham', '2025-12-01', '10:00:00', '123 Main St', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', FALSE);
