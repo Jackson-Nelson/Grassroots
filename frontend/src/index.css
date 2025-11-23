@@ -11,7 +11,7 @@
   text-decoration: underline;
 }
 
-Form > * {
+.Form > * {
   background: linear-gradient(to right, green, rgb(115, 255, 0));
   margin: 15px;
   padding: 10px;

@@ -5,7 +5,7 @@
 -- Users table
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
+    username VARCHAR(50) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(100),
@@ -102,7 +102,7 @@ CREATE TABLE messages (
 -- EXAMPLE DATA
 
 -- USERS
-INSERT INTO users (user_id, username, email, password_hash, full_name, city, county, state, zip, country, bio) VALUES (1, 'celina', 'test@example.com', 'password', 'celina vo', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', 'This is my test biography');
+INSERT INTO users (user_id, username, email, password_hash, full_name, city, county, state, zip, country, bio) VALUES (9991, 'celina', 'test@example.com', 'password', 'celina vo', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', 'This is my test biography');
 
 -- GROUPS
 INSERT INTO groups (group_id, name, description, city, county, state, zip, country, creator_id) VALUES (1, 'Climate Action Bellingham', 'A climate activism group based in Bellingham, WA.', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', 1);
