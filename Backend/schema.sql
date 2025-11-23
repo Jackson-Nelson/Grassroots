@@ -105,8 +105,8 @@ CREATE TABLE messages (
 INSERT INTO users (user_id, username, email, password_hash, full_name, city, county, state, zip, country, bio) VALUES (9991, 'celina', 'test@example.com', 'password', 'celina vo', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', 'This is my test biography');
 
 -- GROUPS
-INSERT INTO groups (group_id, name, description, city, county, state, zip, country, creator_id) VALUES (1, 'Climate Action Bellingham', 'A climate activism group based in Bellingham, WA.', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', 1);
-INSERT INTO groups (group_id, name, description, city, county, state, zip, country, creator_id) VALUES (2, 'Test Group', 'A Test Group From Bham', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', 1);
+INSERT INTO groups (group_id, name, description, city, county, state, zip, country, creator_id) VALUES (1, 'Climate Action Bellingham', 'A climate activism group based in Bellingham, WA.', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', 9991);
+INSERT INTO groups (group_id, name, description, city, county, state, zip, country, creator_id) VALUES (2, 'Test Group', 'A Test Group From Bham', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', 9991);
 
 -- EVENTS
 INSERT INTO events (event_id, group_id, creator_id, title, description, event_date, event_time, address, city, county, state, zip, country, is_cancelled) VALUES (1, 1, 1, 'Climate Action Bellingham Meeting', 'A meeting to discuss climate action in Bellingham, WA.', '2025-12-01', '10:00:00', '123 Main St', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', FALSE);
