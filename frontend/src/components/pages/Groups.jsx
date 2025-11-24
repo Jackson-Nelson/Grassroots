@@ -27,6 +27,32 @@ export default function Groups() {
     scrollToBottom();
   }, [messages, selectedGroup]);
 
+
+  // load all groups I am a member of
+  useEffect(()=>{
+    const fetchGroups = async ()=>{
+      const request = new Request(`${apiURL}/groups/my-groups`, {
+        headers:{
+          "Authorization":"Bearer " + getAuthToken().JWT
+        }
+      });
+
+      try{
+        const response = await fetch(request);
+
+        if(!response.ok){
+          throw new Error('Failed getting my groups: ' + response.text());
+        }
+
+        setGroups(await response.json);
+      }catch(err){
+        console.error(err);
+      }
+    }
+
+    fetchGroups();
+  }, [])
+
   const createGroup = async () => {
     const request = new Request(`${apiURL}/groups/create`, {
       method: 'POST',

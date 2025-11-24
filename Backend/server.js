@@ -54,6 +54,8 @@ const auth = async (req, res, next) => {
   const username = (await pool.query('SELECT username FROM users WHERE user_id = $1', [payload])).rows[0].username;
   console.log("verified [" + username +"]");
 
+  // assign user with verified user id
+  req.user = payload;
   next();
 }
 
@@ -62,6 +64,18 @@ app.get("/api/auth", auth, async (req, res) => {
 
   console.log('authenticated?')
   res.sendStatus(200);
+})
+
+app.get("/api/me", auth, async (req, res)=>{
+
+
+    const result = await pool.query('SELECT * FROM users WHERE user_id = $1', [req.user]);
+
+  if(result.rowCount === 0){
+    return res.sendStatus(400);
+  }
+
+    res.status(200).json(result.rows[0]);
 })
 
 app.post("/api/register", async (req, res) => {
@@ -133,13 +147,16 @@ app.post("/api/login", async (req, res) => {
 // event routes
 app.get("/api/events/nearby", async (req, res) => {
   try {
-    const { city, state, zip, country } = req.query
-    const zipInt = parseInt(zip, 10);
+    const { city, state, country } = req.query
+
     const events = await pool.query(
-      'SELECT * FROM events WHERE city = $1 AND state = $2 AND zip = $3 AND country = $4', 
-      [city, state, zipInt, country]
+      'SELECT * FROM events WHERE city = $1 AND state = $2 AND country = $3', 
+      [city, state, country]
     )
+
+
     res.json(events.rows)
+
   } catch (err) {
     console.error('Error fetching nearby events:', err);
     res.status(500).json({ error: 'Failed to fetch events', details: err.message });
@@ -148,9 +165,9 @@ app.get("/api/events/nearby", async (req, res) => {
 
 
 // group routes
-app.get("/api/groups/my-groups", async (req, res)=>{
+app.get("/api/groups/my-groups", auth, async (req, res)=>{
   try {
-    const {user_id} = req.query
+    const user_id = req.user;
     if (!user_id) {
       return res.status(400).json({ error: 'user_id parameter is required' });
     }
@@ -168,7 +185,8 @@ app.get("/api/groups/my-groups", async (req, res)=>{
 
 // create new group, requires authentication
 app.post("/api/groups/create", auth, async (req, res) => {
-  const { name, desc, tags, creator_id } = req.body;
+  const { name, desc, tags } = req.body;
+  const creator_id = req.user;
 
   console.log("begin group creation: " + name)
 

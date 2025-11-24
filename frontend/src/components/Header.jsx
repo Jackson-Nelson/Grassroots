@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { isLoggedOut } from '../App';
 
 export default function Header() {
   return (
@@ -56,7 +57,7 @@ export default function Header() {
           className="flex items-center gap-2 no-underline z-10"
         >
           <span className="text-green-700 text-sm">
-            my_username
+            
           </span>
           <div className="w-10 h-10 rounded-full bg-green-700" />
         </a>
