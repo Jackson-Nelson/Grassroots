@@ -56,7 +56,7 @@ export default function Header() {
           className="flex items-center gap-2 no-underline z-10"
         >
           <span className="text-green-700 text-sm">
-            my_username
+            Sign in
           </span>
           <div className="w-10 h-10 rounded-full bg-green-700" />
         </a>
