@@ -139,16 +139,9 @@ app.get("/api/events/nearby", async (req, res) => {
 
 
 // group routes
-app.get("/api/groups/my-groups", async (req, res) => {
-  const { user_id } = req.query
-  // Get groups where user is a member OR where user is the creator
-  const groups = await pool.query(
-    `SELECT DISTINCT g.* 
-     FROM groups g 
-     LEFT JOIN group_members gm ON g.group_id = gm.group_id 
-     WHERE gm.user_id = $1 OR g.creator_id = $1`,
-    [user_id]
-  )
+app.get("/api/groups/my-groups", async (req, res)=>{
+  const {user_id} = req.query
+  const groups = await pool.query('SELECT * FROM groups JOIN group_members ON group_id WHERE user_id = #1', [user_id])
   res.json(groups.rows)
 });
 
