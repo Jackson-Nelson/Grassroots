@@ -29,23 +29,23 @@ export default function Groups() {
 
 
   // load all groups I am a member of
-  useEffect(()=>{
-    const fetchGroups = async ()=>{
-      const request = new Request(`${apiURL}/groups/my-groups`, {
-        headers:{
-          "Authorization":"Bearer " + getAuthToken().JWT
+  useEffect(() => {
+    const fetchGroups = async () => {
+      const request = new Request(`${apiURL}/groups/my-groups/`, {
+        headers: {
+          "Authorization": "Bearer " + getAuthToken().JWT
         }
       });
 
-      try{
+      try {
         const response = await fetch(request);
 
-        if(!response.ok){
+        if (!response.ok) {
           throw new Error('Failed getting my groups: ' + response.text());
         }
 
-        setGroups(await response.json);
-      }catch(err){
+        setGroups(await response.json());
+      } catch (err) {
         console.error(err);
       }
     }
@@ -426,8 +426,8 @@ export default function Groups() {
                     >
                       <div
                         className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${msg.user === currentUser
-                            ? 'bg-green-600 text-white'
-                            : 'bg-gray-100 text-gray-800'
+                          ? 'bg-green-600 text-white'
+                          : 'bg-gray-100 text-gray-800'
                           }`}
                       >
                         <p className="text-xs font-semibold mb-1 opacity-75">
