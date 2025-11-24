@@ -97,10 +97,15 @@ const Homepage = () => {
         groupsUrl.searchParams.append('user_id', userId);
 
         const eventsRes = await fetch(eventsUrl);
-        const groupsRes = await fetch(groupsUrl);
+        if (!eventsRes.ok) {
+          const errorText = await eventsRes.text();
+          throw new Error(`Failed to fetch events: ${eventsRes.status} ${errorText}`);
+        }
 
-        if (!eventsRes.ok || !groupsRes.ok) {
-          throw new Error('Failed to fetch data');
+        const groupsRes = await fetch(groupsUrl);
+        if (!groupsRes.ok) {
+          const errorText = await groupsRes.text();
+          throw new Error(`Failed to fetch groups: ${groupsRes.status} ${errorText}`);
         }
 
         const eventsData = await eventsRes.json();
