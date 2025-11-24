@@ -132,17 +132,37 @@ app.post("/api/login", async (req, res) => {
 
 // event routes
 app.get("/api/events/nearby", async (req, res) => {
-  const { city, state, zip, country } = req.query
-  const events = await pool.query('SELECT * FROM events WHERE city = $1 AND state = $2 AND zip = $3 AND country = $4', [city, state, zip, country])
-  res.json(events.rows)
+  try {
+    const { city, state, zip, country } = req.query
+    const zipInt = parseInt(zip, 10);
+    const events = await pool.query(
+      'SELECT * FROM events WHERE city = $1 AND state = $2 AND zip = $3 AND country = $4', 
+      [city, state, zipInt, country]
+    )
+    res.json(events.rows)
+  } catch (err) {
+    console.error('Error fetching nearby events:', err);
+    res.status(500).json({ error: 'Failed to fetch events', details: err.message });
+  }
 });
 
 
 // group routes
-app.get("/api/groups/my-groups", auth, async (req, res)=>{
-  const {user_id} = req.query
-  const groups = await pool.query('SELECT * FROM groups JOIN group_members ON group_id WHERE user_id = #1', [user_id])
-  res.json(groups.rows)
+app.get("/api/groups/my-groups", async (req, res)=>{
+  try {
+    const {user_id} = req.query
+    if (!user_id) {
+      return res.status(400).json({ error: 'user_id parameter is required' });
+    }
+    const groups = await pool.query(
+      'SELECT groups.* FROM groups JOIN group_members ON groups.group_id = group_members.group_id WHERE group_members.user_id = $1', 
+      [user_id]
+    )
+    res.json(groups.rows)
+  } catch (err) {
+    console.error('Error fetching user groups:', err);
+    res.status(500).json({ error: 'Failed to fetch groups', details: err.message });
+  }
 });
 
 
