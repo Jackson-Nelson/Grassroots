@@ -69,7 +69,7 @@ const Homepage = () => {
         setLoading(true);
         
         // example user for frontend purposes.
-        const userId = 1;
+        const userId = 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'; // celina's userid
         const userLocation = {
           city: 'Bellingham',
           state: 'Washington',

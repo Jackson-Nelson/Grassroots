@@ -46,11 +46,10 @@ const UserProfile = () => {
 
 
 
-    return <div><h1>
-        Displaying information for user # {user_id}
-    </h1>
+    return <div>
+        <h1>Displaying information for user # {user_id}</h1>
         <div>
-            {JSON.stringify(data || "Loading...")}
+            {(data || "Loading...")}
         </div>
     </div>
 }
