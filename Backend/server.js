@@ -171,16 +171,47 @@ app.get("/api/groups/my-groups", auth, async (req, res) => {
     if (!user_id) {
       return res.status(400).json({ error: 'user_id parameter is required' });
     }
+
+    // get group 'group' objects
     const groups = await pool.query(
       'SELECT groups.* FROM groups JOIN group_members ON groups.group_id = group_members.group_id WHERE group_members.user_id = $1',
       [user_id]
     )
-    res.status(200).json(groups.rows)
+
+    // will be a list of groups, with the addition of all of their members and tags
+    const augmentedGroups = await Promise.all(groups.rows.map(async (group, i) => {
+
+      // get group tags
+      const tags = await pool.query(
+        'SELECT tag FROM tags JOIN groups ON tags.gid = groups.group_id WHERE groups.group_id = $1',
+        [group.group_id]
+      )
+
+      // get group members
+      const members = await pool.query(
+        'SELECT username FROM groups JOIN group_members ON groups.group_id = group_members.group_id JOIN users ON users.user_id = group_members.user_id WHERE groups.group_id = $1',
+        [group.group_id]
+      )
+
+      const tagNames = tags.rows.map((tag) => tag.tag)
+      const memberNames = members.rows.map((username) => username.username)
+
+      const result = { ...group, tags: tagNames, members: memberNames };
+
+      console.log(result)
+      console.log('======================')
+
+      return result;
+    }))
+
+    res.status(200).json(augmentedGroups)
   } catch (err) {
     console.error('Error fetching user groups:', err);
     res.status(500).json({ error: 'Failed to fetch groups', details: err.message });
   }
 });
+
+
 
 
 // create new group, requires authentication

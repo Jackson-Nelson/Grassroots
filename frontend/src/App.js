@@ -23,7 +23,13 @@ export const isLoggedOut = () => {
 
 function App() {
   return (
+
+
+
     <Router>
+
+
+
       <div className="min-h-screen flex flex-col bg-gray-50">
         {/* header */}
         <Header />
@@ -32,7 +38,13 @@ function App() {
         <Sidebar />
 
         {/* main content */}
-        <div className="flex-1 pl-24 pt-[65px]">          
+        <div className="flex-1 pl-24 pt-[65px]">
+          <button onClick={() => {
+            localStorage.setItem("auth", "null");
+            localStorage.setItem("uid", "null");
+            window.location.href = "/sign-in";
+          }}>Log Out</button>
+
           <Routes>
             <Route exact path="/" element={<Homepage />} />
             <Route path="/home" element={<Homepage />} />

@@ -131,16 +131,17 @@ const Homepage = () => {
         eventsUrl.searchParams.append('state', hasUserLoc.state);
         // eventsUrl.searchParams.append('zip', userLocation.zip);
         eventsUrl.searchParams.append('country', hasUserLoc.country);
-
+        
         // Fetch user's groups with user_id
         // groupsUrl.searchParams.append('user_id', userId);
-
+        
         const eventsRes = await fetch(eventsUrl);
         if (!eventsRes.ok) {
           const errorText = await eventsRes.text();
           throw new Error(`Failed to fetch events: ${eventsRes.status} ${errorText}`);
         }
         const eventsData = await eventsRes.json();
+        setEvents(eventsData);
 
         if(!isLoggedOut()){
           const groupsReq = new Request(`${apiURL}/groups/my-groups/`, {
@@ -162,7 +163,6 @@ const Homepage = () => {
           setGroups(groupsData);
         }
 
-        setEvents(eventsData);
       } catch (err) {
         setError(err.message);
         console.error('Error fetching data:', err);

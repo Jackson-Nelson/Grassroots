@@ -44,7 +44,9 @@ export default function Groups() {
           throw new Error('Failed getting my groups: ' + response.text());
         }
 
-        setGroups(await response.json());
+        const dbGroups = await response.json();
+        console.log(dbGroups)
+        setGroups(dbGroups);
       } catch (err) {
         console.error(err);
       }
