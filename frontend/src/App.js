@@ -32,7 +32,7 @@ function App() {
         <Sidebar />
 
         {/* main content */}
-        <div className="flex-1 pl-24">
+        <div className="flex-1 pl-24 pt-[65px]">          
           <Routes>
             <Route exact path="/" element={<Homepage />} />
             <Route path="/home" element={<Homepage />} />

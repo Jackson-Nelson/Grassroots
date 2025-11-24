@@ -31,32 +31,31 @@ const Register = ({ formData, setFormData }) => {
     }, [geolocation]);
 
     return <div>
-        <div className="mt-1">
-
-            <label id="email" >Email: </label>
-            <input type="email" required id="email" onChange={(e) => setFormData({ ...formData, email: e.target.value, })} />
+        <div className="mt-4">
+            <label id="email" className="block text-sm mb-1">Email</label>
+            <input type="email" required id="email" onChange={(e) => setFormData({ ...formData, email: e.target.value, })} className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-600" />
         </div>
-        <div className="mt-1">
-
-            <label id="username">Username: </label>
-            <input type="text" required id="username" onChange={(e) => setFormData({ ...formData, username: e.target.value, })} />
+        <div className="mt-4">
+            <label id="username" className="block text-sm mb-1">Username</label>
+            <input type="text" required id="username" onChange={(e) => setFormData({ ...formData, username: e.target.value, })} className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-600" />
         </div>
-        <div className="mt-1">
-
-            <label id="city" >City: </label>
-            <input type="text" required id="city" onChange={(e) => setFormData({ ...formData, city: e.target.value, })} defaultValue={geolocation ? `${geolocation.city}` : ''} />
-
-            <label id="state" >State: </label>
-            <input type="text" required id="state" onChange={(e) => setFormData({ ...formData, state: e.target.value, })} defaultValue={geolocation ? `${geolocation.state}` : ''} />
-
-            <label id="country" >Country: </label>
-            <input type="text" id="state" onChange={(e) => setFormData({ ...formData, country: e.target.value, })} defaultValue={geolocation ? `${geolocation.country}` : ''} />
-
+        <div className="mt-4 grid grid-cols-3 gap-2">
+            <div>
+                <label id="city" className="block text-sm mb-1">City</label>
+                <input type="text" required id="city" onChange={(e) => setFormData({ ...formData, city: e.target.value, })} defaultValue={geolocation ? `${geolocation.city}` : ''} className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-600" />
+            </div>
+            <div>
+                <label id="state" className="block text-sm mb-1">State</label>
+                <input type="text" required id="state" onChange={(e) => setFormData({ ...formData, state: e.target.value, })} defaultValue={geolocation ? `${geolocation.state}` : ''} className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-600" />
+            </div>
+            <div>
+                <label id="country" className="block text-sm mb-1">Country</label>
+                <input type="text" id="country" onChange={(e) => setFormData({ ...formData, country: e.target.value, })} defaultValue={geolocation ? `${geolocation.country}` : ''} className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-600" />
+            </div>
         </div>
-        <div className="mt-1">
-
-            <label id="pass">Password: </label>
-            <input type="password" required id="pass" onChange={(e) => setFormData({ ...formData, password: e.target.value, })} />
+        <div className="mt-4">
+            <label id="pass" className="block text-sm mb-1">Password</label>
+            <input type="password" required id="pass" onChange={(e) => setFormData({ ...formData, password: e.target.value, })} className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-600" />
         </div>
     </div>
 
@@ -65,15 +64,13 @@ const Register = ({ formData, setFormData }) => {
 const Login = ({ formData, setFormData }) => {
 
     return <div>
-        <div className="mt-1">
-
-            <label id="email" >Email: </label>
-            <input type="email" id="email" onChange={(e) => setFormData({ ...formData, email: e.target.value, })} />
+        <div className="mt-4">
+            <label id="email" className="block text-sm mb-1">Email</label>
+            <input type="email" id="email" onChange={(e) => setFormData({ ...formData, email: e.target.value, })} className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-600" />
         </div>
-        <div className="mt-1">
-
-            <label id="pass">Password: </label>
-            <input type="password" id="pass" onChange={(e) => setFormData({ ...formData, password: e.target.value, })} />
+        <div className="mt-4">
+            <label id="pass" className="block text-sm mb-1">Password</label>
+            <input type="password" id="pass" onChange={(e) => setFormData({ ...formData, password: e.target.value, })} className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-600" />
         </div>
     </div>
 
@@ -164,17 +161,17 @@ export const Auth = () => {
         }
     }, [loginStatus]);
 
-    return <div className="Form">
+    return <div className="max-w-lg mx-auto mt-12 p-8 bg-white rounded-lg shadow border">
 
-        {loginOrRegister === "login" ? (<div>Don't have an account? <a className="cursor-pointer underline" onClick={() => setRegOrLogin("register")}>Register instead</a></div>) : (<div>Already have an account? <a className="cursor-pointer underline" onClick={() => setRegOrLogin("login")}>Login instead</a></div>)}
-        <div>Don't want to create an account? <a className="underline" href="/home">Browse your local Grassroots</a></div>
+        {loginOrRegister === "login" ? (<div className="text-sm mb-2">Don't have an account? <a className="cursor-pointer underline text-green-600" onClick={() => setRegOrLogin("register")}>Register instead</a></div>) : (<div className="text-sm mb-2">Already have an account? <a className="cursor-pointer underline text-green-600" onClick={() => setRegOrLogin("login")}>Login instead</a></div>)}
+        <div className="text-sm mb-6">Don't want to create an account? <a className="underline text-green-600" href="/home">Browse your local Grassroots</a></div>
 
         <div>
             {loginOrRegister === "login" ? <Login formData={formData} setFormData={setFormData} /> : <Register formData={formData} setFormData={setFormData} />}
 
             {statusBit(loginStatus)}
 
-            <button onClick={loginUser}>{loginOrRegister === "login" ? "Login" : "Register"}</button>
+            <button onClick={loginUser} className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white py-2 rounded">{loginOrRegister === "login" ? "Login" : "Register"}</button>
 
         </div>
     </div>
@@ -183,10 +180,10 @@ export const Auth = () => {
 const statusBit = (loginStatus) => {
     switch (loginStatus) {
         case "failure":
-            return <div>Incorrect username or password.</div>
+            return <div className="mt-4 p-3 bg-red-50 border border-red-300 rounded text-red-700 text-sm">Incorrect username or password.</div>
             break;
         case "error":
-            return <div>Something went wrong. Please try again.</div>
+            return <div className="mt-4 p-3 bg-red-50 border border-red-300 rounded text-red-700 text-sm">Something went wrong. Please try again.</div>
         default:
             break;
     }
