@@ -139,7 +139,7 @@ app.get("/api/events/nearby", async (req, res) => {
 
 
 // group routes
-app.get("/api/groups/my-groups", async (req, res)=>{
+app.get("/api/groups/my-groups", auth, async (req, res)=>{
   const {user_id} = req.query
   const groups = await pool.query('SELECT * FROM groups JOIN group_members ON group_id WHERE user_id = #1', [user_id])
   res.json(groups.rows)

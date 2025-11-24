@@ -1,8 +1,9 @@
 import React, { useState, Fragment, useRef, useEffect } from 'react';
 import { Users, Plus, X, UserPlus, Send, MessageCircle } from 'lucide-react';
+import { getAuthToken } from '../../App';
 
 // Mock getAuthToken function for demo
-const getAuthToken = () => ({ JWT: 'demo-token', uid: 'user-123' });
+// const getAuthToken = () => ({ JWT: 'demo-token', uid: 'user-123' });
 
 const apiURL = 'http://localhost:4000/api';
 
@@ -52,13 +53,13 @@ export default function Groups() {
         tags: newGroup.tags,
         members: []
       };
-      
+
       setGroups([...groups, newGroupData]);
       setMessages({ ...messages, [newGroupData.id]: [] });
       setNewGroup({ name: '', description: '', tags: [] });
       setTagInput('');
       setShowCreateModal(false);
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       // For demo purposes, still create the group locally
       const newGroupData = {
@@ -68,7 +69,7 @@ export default function Groups() {
         tags: newGroup.tags,
         members: []
       };
-      
+
       setGroups([...groups, newGroupData]);
       setMessages({ ...messages, [newGroupData.id]: [] });
       setNewGroup({ name: '', description: '', tags: [] });
@@ -398,11 +399,10 @@ export default function Groups() {
                       className={`flex ${msg.user === currentUser ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                          msg.user === currentUser
+                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${msg.user === currentUser
                             ? 'bg-green-600 text-white'
                             : 'bg-gray-100 text-gray-800'
-                        }`}
+                          }`}
                       >
                         <p className="text-xs font-semibold mb-1 opacity-75">
                           {msg.user}
