@@ -1,4 +1,4 @@
-import { MessageSquare, Users, Calendar, Bell } from "lucide-react"
+import { MessageSquare, Users, Calendar, Bell, Hash, CalendarDays, BarChart3, FolderOpen } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
@@ -7,6 +7,13 @@ const MENU_ITEMS = [
   { icon: Users, label: "Groups", path: "/groups" },
   { icon: Calendar, label: "Events", path: "/events" },
   { icon: Bell, label: "Notifications", path: "/notifications" },
+]
+
+const GROUPS_PAGE_ITEMS = [
+  { icon: Hash, label: "Channels", path: "/groups/channels" },
+  { icon: CalendarDays, label: "Group Events", path: "/groups/events" },
+  { icon: BarChart3, label: "Polls", path: "/groups/polls" },
+  { icon: FolderOpen, label: "Resources", path: "/groups/resources" },
 ]
 
 export default function Sidebar() {
@@ -25,6 +32,8 @@ export default function Sidebar() {
     window.addEventListener("resize", update)
     return () => window.removeEventListener("resize", update)
   }, [])
+
+  const isGroupsPage = pathname === "/groups" || pathname.startsWith("/groups/")
 
   return (
     <aside
@@ -45,6 +54,22 @@ export default function Sidebar() {
               onClick={() => navigate(item.path)}
             />
           ))}
+          
+          {/* Additional items shown only on Groups page */}
+          {isGroupsPage && (
+            <>
+              <li className="my-2 border-t border-gray-200"></li>
+              {GROUPS_PAGE_ITEMS.map((item) => (
+                <SidebarItem
+                  key={item.path}
+                  icon={<item.icon size={20} />}
+                  label={item.label}
+                  active={pathname === item.path}
+                  onClick={() => navigate(item.path)}
+                />
+              ))}
+            </>
+          )}
         </ul>
       </nav>
     </aside>
