@@ -33,22 +33,26 @@ app.get("/api/adduser", (req, res) => {
 
 
 // include auth before your private data request
-const auth = (req, res, next) => {
+const auth = async (req, res, next) => {
 
   const headers = req.headers;
   const token = (headers.authorization || "").replace("Bearer ", "");
 
-  if(token === 'null'){
-    res.sendStatus(401);
-    return;
+  console.log(`Checking token: ${token} (${typeof token})`)
+  if (token === 'null') {
+    console.log(`No token. Status 403`)
+
+    return res.sendStatus(403);
   }
 
-  const payload = jwt.verify(token, JWT_Key);
+  const payload = jwt.verify(token, JWT_Key).uid;
 
   if (!payload) {
-    res.sendStatus(401);
-    return;
+    return res.sendStatus(401);
   }
+
+  const username = (await pool.query('SELECT username FROM users WHERE user_id = $1', [payload])).rows[0].username;
+  console.log("verified [" + username +"]");
 
   next();
 }
@@ -149,21 +153,77 @@ app.get("/api/groups/my-groups", async (req, res) => {
 });
 
 
+// create new group, requires authentication
+app.post("/api/groups/create", auth, async (req, res) => {
+  const { name, desc, tags, creator_id } = req.body;
+
+  console.log("begin group creation: " + name)
+
+  // name and description are required
+  if (!name || !desc) {
+    return res.status(400).send("missing name or description!");
+  }
+
+  if (name.length <= 3) {
+    res.status(400).send("name must be longer than 3 characters!");
+  }
+
+
+  let result = await pool.query("SELECT city, country FROM users WHERE user_id = $1", [creator_id]);
+
+  // check if result faild somehow
+  if (result.rowCount === 0) {
+    return res.status(400).send('something went wreally wrong!');
+  }
+
+  console.log(JSON.stringify(result));
+
+  // city/country of group should equal those of the creator
+  const [city, country] = [result.rows[0].city, result.rows[0].country];
+
+  console.log('city:' + city);
+  console.log('country:' + country);
+
+  // check if group by that name already exists
+  result = await pool.query('SELECT * FROM groups where name = $1 and city = $2 and country = $3', [name, city, country]);
+  if (result.rowCount !== 0) {
+    return res.status(400).send("group already exists!");
+  }
+
+
+  //all checks passed, create group
+  result = await pool.query("INSERT INTO groups (name, description, city, country, creator_id, created_at) VALUES($1, $2, $3, $4, $5, NOW()) RETURNING group_id", [name, desc, city, country, creator_id])
+
+  const group_id = result.rows[0].group_id;
+
+  // add tags to pool of tags
+  tags.forEach(async tag => {
+    await pool.query("INSERT INTO tags (tag, gid) VALUES($1, $2)", [tag, group_id]);
+  });
+
+  // creator is first member by default
+  await pool.query("INSERT INTO group_members (group_id, user_id, role) VALUES($1, $2, 'owner')", [group_id, creator_id]);
+
+  res.status(201).json({ success: 'yipee', gid: group_id });
+
+})
+
+
 
 // user data
-app.get('/api/users/:userId', async (req, res) =>{
-  
+app.get('/api/users/:userId', async (req, res) => {
+
   const uid = req.params.userId;
   console.log(uid)
 
   //check if user exists in db
   const results = await pool.query('SELECT username FROM users WHERE user_id = $1', [uid])
 
-  if(results.rowCount === 0){
+  if (results.rowCount === 0) {
     res.status(400).send("No such user.");
   }
 
-  res.status(200).json({username:results.rows[0].username});
+  res.status(200).json({ username: results.rows[0].username });
 })
 
 
