@@ -1,12 +1,10 @@
-import { MessageSquare, Users, Calendar, Bell, Hash, CalendarDays, BarChart3, FolderOpen } from "lucide-react"
+import { Users, Calendar, Hash, CalendarDays, BarChart3, FolderOpen } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
 const MENU_ITEMS = [
-  { icon: MessageSquare, label: "Chats", path: "/chats" },
   { icon: Users, label: "Groups", path: "/groups" },
   { icon: Calendar, label: "Events", path: "/events" },
-  { icon: Bell, label: "Notifications", path: "/notifications" },
 ]
 
 const GROUPS_PAGE_ITEMS = [
