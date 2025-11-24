@@ -7,16 +7,18 @@ database.
 2. Install Node.js
 3. In ~/frontend and ~/backend run `npm install`
 4. Setup local DB (from ~/backend)
-# Connect to PostgreSQL (default user is 'postgres')
+##### Connect to PostgreSQL (default user is 'postgres')
 $ psql -U postgres
-# You'll be prompted for password (set during installation)
-# Once connected, create the database:
+##### You'll be prompted for password (set during installation)
+##### Once connected, create the database:
 $ CREATE DATABASE grassroots;
-# Exit psql
+###### Exit psql
 $ \q
-# Run the schema file to create all tables
+###### Run the schema file to create all tables
 $ psql -U postgres -d grassroots -f schema.sql
+
 5. Create a file called ‘.env’ in ~/backend including database config that looks like these:
+```env
 PORT=4000
 DB_HOST=localhost
 DB_PORT={your_postgres_port}
@@ -24,6 +26,7 @@ DB_NAME=grassroots
 DB_USER=postgres
 DB_PASSWORD={your_password}
 JSON_TOKEN_SECRET_KEY={whatever you want}
+```
 Steps to run it:
 1. From the backend folder, start the server with npm run dev
 a. Make sure your port is available
