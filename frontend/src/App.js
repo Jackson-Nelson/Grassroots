@@ -16,7 +16,7 @@ export const getAuthToken = () => {
 }
 
 export const isLoggedOut = () => {
-  return localStorage.getItem('uid') === null;
+  return localStorage.getItem('uid') === `${null}`;
 }
 
 // const pages = [["home", Homepage], ["sign-in", Auth], ["groups", Groups] ];
@@ -40,8 +40,8 @@ function App() {
         {/* main content */}
         <div className="flex-1 pl-24 pt-[65px]">
           <button onClick={() => {
-            localStorage.setItem("auth", "null");
-            localStorage.setItem("uid", "null");
+            localStorage.setItem("auth", null);
+            localStorage.setItem("uid", null);
             window.location.href = "/sign-in";
           }}>Log Out</button>
 
