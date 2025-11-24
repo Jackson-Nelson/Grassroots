@@ -4,6 +4,8 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import Homepage from './components/pages/Homepage.jsx'
 import Groups from './components/pages/Groups.jsx'
 import UserProfile from './components/UserProfile.jsx'
+import Header from './components/Header.jsx'
+import Sidebar from './components/Sidebar.jsx'
 
 // many things will need to pass this auth token when they try to get any info about a user, keep logged in, etc.
 // so it is exported from App
@@ -18,20 +20,24 @@ export const getAuthToken = () => {
 function App() {
   return (
     <Router>
-      <nav id="main_nav" className="bg-green">
-        <Link className="nav-link" to='/home'>home</Link>
-        <Link className="nav-link" to='/groups'>groups</Link>
-        <Link className="nav-link" to='/sign-in'>sign-in</Link>
-      </nav>
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        {/* header */}
+        <Header />
 
-      <Routes>
-        <Route exact path="/" element={<Homepage />} />
-        <Route path="/home" element={<Homepage />} />
-        <Route path="/sign-in" element={<Auth />} />
-        <Route path="/groups" element={<Groups />} />
-        <Route path="/users/:userId" element={<UserProfile />} />
-      </Routes>
+        {/* sidebar */}
+        <Sidebar />
 
+        {/* main content */}
+        <div className="flex-1 pl-24">
+          <Routes>
+            <Route exact path="/" element={<Homepage />} />
+            <Route path="/home" element={<Homepage />} />
+            <Route path="/sign-in" element={<Auth />} />
+            <Route path="/groups" element={<Groups />} />
+            <Route path="/users/:userId" element={<UserProfile />} />
+          </Routes>
+        </div>
+      </div>
     </Router>
 
   );

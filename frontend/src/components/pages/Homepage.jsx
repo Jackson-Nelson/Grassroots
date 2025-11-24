@@ -120,47 +120,9 @@ const Homepage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* HEADER */}
-      <nav className="bg-white border-b border-gray-200 px-5 py-3">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <a href="#" className="flex items-center no-underline">
-            <span className="text-3xl mr-2">🌱</span>
-            <span className="text-2xl font-bold text-green-700">
-              Grassroots
-            </span>
-          </a>
-
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <input
-                type="search"
-                placeholder="Search Groups, Events, Discussions..."
-                className="w-80 pl-3 pr-10 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              />
-              <button
-                type="button"
-                className="absolute right-1 top-1/2 -translate-y-1/2 px-2 py-1 text-xl text-gray-600 hover:text-green-600"
-              >
-                +
-              </button>
-            </div>
-
-            <a
-              href="#"
-              className="flex items-center gap-2 no-underline"
-            >
-              <span className="text-green-700 text-sm">
-                my_username
-              </span>
-              <div className="w-10 h-10 rounded-full bg-green-700" />
-            </a>
-          </div>
-        </div>
-      </nav>
-
+    <div className="flex flex-col relative">
       {/* MAIN CONTENT */}
-      <main className="flex-1 w-full max-w-6xl mx-auto px-5 py-8">
+      <main className="flex-1 w-full px-8 py-8">
         {/* EVENTS SECTION */}
         <section className="mb-12">
           <h2 className="text-2xl font-semibold text-green-700 mb-5">
@@ -212,25 +174,19 @@ const Homepage = () => {
         </section>
       </main>
 
-      {/* FOOTER */}
-      <footer className="mt-auto px-8 py-5 text-right">
-        <div>
-          <a href="#" className="text-green-700 no-underline">
+      {/* footer */}
+      <footer className="fixed bottom-0 right-0 px-8 py-5 text-right z-10">
+        <div className="flex flex-col gap-1">
+          <a href="#" className="text-green-700 no-underline hover:underline">
             About Us
           </a>
-        </div>
-        <div>
-          <a href="#" className="text-green-700 no-underline">
+          <a href="#" className="text-green-700 no-underline hover:underline">
             Contact
           </a>
-        </div>
-        <div>
-          <a href="#" className="text-green-700 no-underline">
+          <a href="#" className="text-green-700 no-underline hover:underline">
             Tutorial
           </a>
-        </div>
-        <div>
-          <a href="#" className="text-green-700 no-underline">
+          <a href="#" className="text-green-700 no-underline hover:underline">
             Language ⌄
           </a>
         </div>
