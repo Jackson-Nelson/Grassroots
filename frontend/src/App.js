@@ -15,6 +15,10 @@ export const getAuthToken = () => {
   return { JWT: tok, uid: user_id };
 }
 
+export const isLoggedOut = () => {
+  return localStorage.getItem('uid') === null;
+}
+
 // const pages = [["home", Homepage], ["sign-in", Auth], ["groups", Groups] ];
 
 function App() {

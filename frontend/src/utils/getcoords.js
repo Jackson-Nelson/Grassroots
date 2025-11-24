@@ -67,8 +67,8 @@ country,
 country_code,
  
  */
-function getLocale(setLocationState) {
-    getCoordintes(setLocationState);
+function getLocale(locationStateSetter) {
+    getCoordintes(locationStateSetter);
 }
 
 export default getLocale;
