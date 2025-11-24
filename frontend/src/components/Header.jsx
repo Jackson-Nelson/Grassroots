@@ -1,8 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { isLoggedOut } from '../App';
+import { isLoggedOut, getAuthToken } from '../App';
+
+const apiURL = 'http://localhost:4000/api'
 
 export default function Header() {
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    const fetchUsername = async () => {
+      const request = new Request(`${apiURL}/me`, {
+        headers: {
+          "Authorization": "Bearer " + getAuthToken().JWT
+        }
+      });
+
+      try {
+
+        const response = await fetch(request);
+        
+        if (!response.ok) {
+          // could be because not logged in
+          if (response.status === 401) {
+            window.location.href = "/sign-in";
+            throw new Error('Failed getting user info');
+          }
+        }
+
+        const user = await response.json();
+        setUsername(user.username);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchUsername();
+  }, []);
+
   return (
     <nav id="main-header" className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-5 py-3">
       <div className="flex items-center justify-between w-full">
@@ -52,15 +86,26 @@ export default function Header() {
         </div>
 
         {/* right: user */}
-        <a
-          href="#"
-          className="flex items-center gap-2 no-underline z-10"
-        >
-          <span className="text-green-700 text-sm">
-            
-          </span>
-          <div className="w-10 h-10 rounded-full bg-green-700" />
-        </a>
+        {isLoggedOut() || !username ? (
+          <Link
+            to="/sign-in"
+            className="flex items-center gap-2 no-underline z-10"
+          >
+            <span className="text-green-700 text-sm">
+              Sign in
+            </span>
+            <div className="w-10 h-10 rounded-full bg-green-700" />
+          </Link>
+        ) : (
+          <div className="flex items-center gap-2 z-10">
+            <span className="text-green-700 text-sm font-medium">
+              {username}
+            </span>
+            <div className="w-10 h-10 rounded-full bg-green-700 flex items-center justify-center text-white font-semibold">
+              {username.charAt(0).toUpperCase()}
+            </div>
+          </div>
+        )}
 
       </div>
     </nav>
