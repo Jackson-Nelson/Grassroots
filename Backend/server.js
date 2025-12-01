@@ -270,6 +270,45 @@ app.post("/api/groups/create", auth, async (req, res) => {
 
 })
 
+app.get("/api/groups/message-history", async (req, res) => {
+  
+  const groupId = req.query.groupId;
+
+  // check if group exists
+  let results = await pool.query('SELECT group_id FROM groups WHERE groups.group_id = $1', [groupId]);
+  if(results.rowCount === 0){
+    return res.sendStatus(404);
+  }
+
+  results = await pool.query('SELECT * FROM messages JOIN groups ON messages.group_id = groups.group_id JOIN users WHERE messages.user_id = users.user_id WHERE groups.group_id = $1', [groupId]);
+  const msgs = results.rows;
+console.log(msgs[0]);
+
+  return res.status(200).json(msgs);
+
+})
+
+// must be logged in to send a message
+app.post("/api/groups/:groupId/send-message", auth, async (req, res) => {
+    
+  const groupId = req.params.groupId;
+  const sender = req.userId;
+  const {content} = req.body;
+
+  // check if group exists
+  let results = await pool.query('SELECT group_id FROM groups WHERE groups.group_id = $1', [groupId]);
+  if(results.rowCount === 0){
+    return res.sendStatus(404);
+  }
+
+  results = await pool.query('INSERT INTO messages (group_id, user_id, content, created_at) VALUES($1, $2, $3, NOW()) RETURNING message_id', [groupId, sender, content]);
+
+  if(results.rowCount === 0){
+    return res.sendStatus(500);
+  }
+
+  res.status(200).json(results.rows[0]);
+})
 
 
 // user data

@@ -19,6 +19,8 @@ export const isLoggedOut = () => {
   return localStorage.getItem('uid') === `${null}`;
 }
 
+export const apiURL = 'http://localhost:4000/api';
+
 // const pages = [["home", Homepage], ["sign-in", Auth], ["groups", Groups] ];
 
 function App() {

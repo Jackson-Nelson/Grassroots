@@ -4,10 +4,8 @@ import passInput from "./assets/pass-input.png";
 import userInput from "./assets/user-input.png";
 import { useEffect } from "react";
 import getLocale from '../utils/getcoords.js'
-import { getAuthToken } from "../App.js";
+import { apiURL, getAuthToken } from "../App.js";
 
-
-const apiURL = 'http://localhost:4000/api'
 
 // this is the only place auth token should be set, so it is not exported
 const setAuthToken = (tok, userId) => {

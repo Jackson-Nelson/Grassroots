@@ -1,7 +1,6 @@
 import { react, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-
-const apiURL = "http://localhost:4000/api"
+import { apiURL } from '../App';
 
 const UserProfile = () => {
 

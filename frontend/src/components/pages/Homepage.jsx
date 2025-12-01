@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getAuthToken, isLoggedOut } from '../../App';
+import { apiURL, getAuthToken, isLoggedOut } from '../../App';
 import getLocale from '../../utils/getcoords';
 
 const placeholderImg = "https://picsum.photos/400/300";
-const apiURL = 'http://localhost:4000/api'
 
 const EventCard = ({ event }) => {
 
@@ -126,7 +125,7 @@ const Homepage = () => {
         /* the "http://localhost:4000" will be replaced with the base URL .env variable once the backend is implemented. need to fix CORS */
 
         // fetch nearby events TODO: fix the query so that params can be more flexible.
-        const eventsUrl = new URL('http://localhost:4000/api/events/nearby');
+        const eventsUrl = new URL(`${apiURL}/events/nearby`);
         eventsUrl.searchParams.append('city', hasUserLoc.city);
         eventsUrl.searchParams.append('state', hasUserLoc.state);
         // eventsUrl.searchParams.append('zip', userLocation.zip);

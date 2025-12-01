@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { isLoggedOut, getAuthToken } from '../App';
-
-const apiURL = 'http://localhost:4000/api'
+import { isLoggedOut, getAuthToken, apiURL } from '../App';
 
 export default function Header() {
   const [username, setUsername] = useState('');
