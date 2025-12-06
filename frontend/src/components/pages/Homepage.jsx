@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiURL, getAuthToken, isLoggedOut } from '../../App';
 import getLocale from '../../utils/getcoords';
 
 const placeholderImg = "https://picsum.photos/400/300";
 
 const EventCard = ({ event }) => {
+  const navigate = useNavigate();
 
   // get location from event
   const location = event.address
@@ -16,8 +18,15 @@ const EventCard = ({ event }) => {
     ? `${new Date(event.event_date).toLocaleDateString()} at ${event.event_time.substring(0, 5)}`
     : new Date(event.event_date).toLocaleDateString();
 
+  const handleClick = () => {
+    navigate(`/events/${event.event_id}`);
+  };
+
   return (
-    <div className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[30%] mb-5 bg-white shadow-sm">
+    <div 
+      onClick={handleClick}
+      className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[30%] mb-5 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+    >
       <img
         src={event.image_url || placeholderImg}
         alt={event.title}

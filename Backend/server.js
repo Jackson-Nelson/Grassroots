@@ -163,6 +163,125 @@ app.get("/api/events/nearby", async (req, res) => {
   }
 });
 
+// FOR EVENT PAGES: fetching individual event info
+app.get("/api/events/:eventId", async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    // get event
+    const eventResult = await pool.query(
+      `SELECT e.*, g.name as group_name, g.description as group_description, 
+              u.username as creator_username
+       FROM events e
+       JOIN groups g ON e.group_id = g.group_id
+       JOIN users u ON e.creator_id = u.user_id
+       WHERE e.event_id = $1`,
+      [eventId]
+    );
+
+    if (eventResult.rowCount === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const event = eventResult.rows[0];
+    res.json(event);
+
+  } catch (err) {
+    console.error('Error fetching event:', err);
+    res.status(500).json({ error: 'Failed to fetch event', details: err.message });
+  }
+});
+
+// update an event (requires auth, only creator can update)
+app.put("/api/events/:eventId", auth, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const userId = req.user;
+    const { title, description, event_date, event_time, address, city, state, zip, country } = req.body;
+
+    // check if event exists and user is the creator
+    const eventResult = await pool.query(
+      'SELECT creator_id FROM events WHERE event_id = $1',
+      [eventId]
+    );
+
+    // correct country input for the united states of america
+    if (country !== undefined) {
+      const normalizedCountry = country.trim();
+      if (normalizedCountry === "United States" || normalizedCountry === "US") {
+        country = "United States of America";
+      }
+    }
+
+    if (eventResult.rowCount === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    if (eventResult.rows[0].creator_id !== userId) {
+      return res.status(403).json({ error: 'Only the event creator can update this event' });
+    }
+
+    // updating an event:
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (title !== undefined) {
+      updates.push(`title = $${paramIndex++}`);
+      values.push(title);
+    }
+    if (description !== undefined) {
+      updates.push(`description = $${paramIndex++}`);
+      values.push(description);
+    }
+    if (event_date !== undefined) {
+      updates.push(`event_date = $${paramIndex++}`);
+      values.push(event_date);
+    }
+    if (event_time !== undefined) {
+      updates.push(`event_time = $${paramIndex++}`);
+      values.push(event_time);
+    }
+    if (address !== undefined) {
+      updates.push(`address = $${paramIndex++}`);
+      values.push(address);
+    }
+    if (city !== undefined) {
+      updates.push(`city = $${paramIndex++}`);
+      values.push(city);
+    }
+    if (state !== undefined) {
+      updates.push(`state = $${paramIndex++}`);
+      values.push(state);
+    }
+    if (zip !== undefined) {
+      updates.push(`zip = $${paramIndex++}`);
+      values.push(zip);
+    }
+    if (country !== undefined) {
+      updates.push(`country = $${paramIndex++}`);
+      values.push(country);
+    }
+
+    values.push(eventId);
+
+    const updateQuery = `
+      UPDATE events 
+      SET ${updates.join(', ')}
+      WHERE event_id = $${paramIndex}
+      RETURNING *
+    `;
+
+    const result = await pool.query(updateQuery, values);
+
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    console.error('Error updating event:', err);
+    res.status(500).json({ error: 'Failed to update event', details: err.message });
+  }
+});
+
 
 // group routes
 app.get("/api/groups/my-groups", auth, async (req, res) => {
