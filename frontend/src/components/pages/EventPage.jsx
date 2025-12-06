@@ -26,7 +26,7 @@ const EventPage = () => {
 
         // Check if user is creator
         if (!isLoggedOut()) {
-          setIsCreator(data.creator_id === getAuthToken().uid);
+          setIsCreator(data.creator_id === getAuthToken().user.uid);
         }
       } catch (err) {
         setError(err.message);

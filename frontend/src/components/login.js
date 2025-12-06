@@ -8,9 +8,9 @@ import { apiURL, getAuthToken } from "../App.js";
 
 
 // this is the only place auth token should be set, so it is not exported
-const setAuthToken = (tok, userId) => {
+const setAuthToken = (tok, user) => {
     localStorage.setItem("auth", tok);
-    localStorage.setItem("uid", userId);
+    localStorage.setItem("user", JSON.stringify(user));
 }
 
 
@@ -116,7 +116,7 @@ export const Auth = () => {
             }
 
             setLoginStatus("success");
-            setAuthToken(results.JWT, results.uid)
+            setAuthToken(results.JWT, results.user)
         } catch (error) {
             setLoginStatus("failure");
             console.error(error);
@@ -141,14 +141,14 @@ export const Auth = () => {
                 window.location.href = "/home";
             }
         } catch (err) {
-            console.error("AUTHENTICATION ERROR:", err)
+            console.log("Not logged in")
         }
     }
 
 
     useEffect(() => {
         checkAlreadyLoggedIn();
-        console.log("EFFECT USED");
+        // console.log("EFFECT USED");
     }, []);
 
     // this saves the session authorization and the constant dictates where to redirect to.
