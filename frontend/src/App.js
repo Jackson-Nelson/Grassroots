@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import Homepage from './components/pages/Homepage.jsx'
 import Groups from './components/pages/Groups.jsx'
 import UserProfile from './components/UserProfile.jsx'
+import EventPage from './components/pages/EventPage.jsx'
 import Header from './components/Header.jsx'
 import Sidebar from './components/Sidebar.jsx'
 
@@ -20,18 +21,11 @@ export const isLoggedOut = () => {
 }
 
 export const apiURL = 'http://localhost:4000/api';
-
 // const pages = [["home", Homepage], ["sign-in", Auth], ["groups", Groups] ];
 
 function App() {
   return (
-
-
-
     <Router>
-
-
-
       <div className="min-h-screen flex flex-col bg-gray-50">
         {/* header */}
         <Header />
@@ -41,18 +35,13 @@ function App() {
 
         {/* main content */}
         <div className="flex-1 pl-24 pt-[65px]">
-          <button onClick={() => {
-            localStorage.setItem("auth", null);
-            localStorage.setItem("uid", null);
-            window.location.href = "/sign-in";
-          }}>Log Out</button>
-
           <Routes>
             <Route exact path="/" element={<Homepage />} />
             <Route path="/home" element={<Homepage />} />
             <Route path="/sign-in" element={<Auth />} />
             <Route path="/groups" element={<Groups />} />
             <Route path="/users/:userId" element={<UserProfile />} />
+            <Route path="/events/:eventId" element={<EventPage />} />
           </Routes>
         </div>
       </div>
