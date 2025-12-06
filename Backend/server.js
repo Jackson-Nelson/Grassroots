@@ -227,7 +227,7 @@ app.post("/api/groups/create", auth, async (req, res) => {
   }
 
   if (name.length <= 3) {
-    res.status(400).send("name must be longer than 3 characters!");
+    return res.status(400).send("name must be longer than 3 characters!");
   }
 
 
@@ -274,13 +274,16 @@ app.get("/api/groups/message-history", async (req, res) => {
   
   const groupId = req.query.groupId;
 
+console.log("Getting message history for group: " + groupId);
+
+
   // check if group exists
   let results = await pool.query('SELECT group_id FROM groups WHERE groups.group_id = $1', [groupId]);
   if(results.rowCount === 0){
     return res.sendStatus(404);
   }
 
-  results = await pool.query('SELECT * FROM messages JOIN groups ON messages.group_id = groups.group_id JOIN users WHERE messages.user_id = users.user_id WHERE groups.group_id = $1', [groupId]);
+  results = await pool.query('SELECT * FROM messages JOIN groups ON messages.group_id = groups.group_id JOIN users ON messages.user_id = users.user_id WHERE groups.group_id = $1', [groupId]);
   const msgs = results.rows;
 console.log(msgs[0]);
 
@@ -332,6 +335,6 @@ app.get('/api/users/:userId', async (req, res) => {
 
 
 
-app.listen(process.env.PORT, () => console.log("Server listening on localhost:4000"))
+app.listen(process.env.PORT, () => console.log("Server listening on localhost:" + process.env.PORT))
 
 

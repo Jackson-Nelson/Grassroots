@@ -8,6 +8,7 @@ export default function Header() {
   useEffect(() => {
     const fetchUsername = async () => {
       const request = new Request(`${apiURL}/me`, {
+        method: "GET",
         headers: {
           "Authorization": "Bearer " + getAuthToken().JWT
         }

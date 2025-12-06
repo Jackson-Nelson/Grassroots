@@ -70,6 +70,7 @@ const Homepage = () => {
   useEffect(() => {
     const fetchLoc = async () => {
       const request = new Request(`${apiURL}/me`, {
+        method: "GET",
         headers: {
           "Authorization": "Bearer " + getAuthToken().JWT
         }

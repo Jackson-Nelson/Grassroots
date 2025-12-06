@@ -45,7 +45,12 @@ export default function Groups() {
 
         const dbGroups = await response.json();
         console.log(dbGroups)
-        setGroups(dbGroups);
+        setGroups(dbGroups.map((g) => {
+          return {
+            ...g,
+            id: g.group_id,
+          };
+        }));
       } catch (err) {
         console.error(err);
       }
@@ -57,6 +62,7 @@ export default function Groups() {
   // load messages when I open a group
   useEffect(() => {
     const getMessageHistory = async () => {
+      console.log(`getting msg history from group: ${selectedGroup.id}`)
       const request = new Request(`${apiURL}/groups/message-history?groupId=${selectedGroup.id}`,
         {
           headers: {
@@ -85,7 +91,8 @@ export default function Groups() {
         console.error(err);
       }
     }
-console.log("selected group: " + selectedGroup)
+
+    // only get message history if selectedGroup is valid
     if (selectedGroup) {
       getMessageHistory();
     }
@@ -111,7 +118,7 @@ console.log("selected group: " + selectedGroup)
       if (!response.ok) throw new Error('Error: ' + await response.text());
 
       const newGroupData = {
-        id: Date.now(),
+        id: (await response.json()).gid,
         name: newGroup.name,
         description: newGroup.description,
         tags: newGroup.tags,
@@ -160,46 +167,48 @@ console.log("selected group: " + selectedGroup)
     }
   };
 
-  const sendMessage = ()=>{const sendMsg = async () => {
-    console.log("tried to send a message")
-    if (messageInput.trim() && currentUser && selectedGroup) {
-      const request = new Request(`${apiURL}/groups/${selectedGroup.id}/send-message`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + getAuthToken().JWT
-        },
-        body: {
-          "content": messageInput.trim()
-        }
-      });
-
-      try {
-        const response = await fetch(request);
-
-        if (!response.ok) {
-          throw new Error(await response.text());
-        }
-
-        const newMessage = {
-          id: await response.json().message_id,
-          user: currentUser,
-          text: messageInput.trim(),
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-
-        setMessages({
-          ...messages,
-          [selectedGroup.id]: [...(messages[selectedGroup.id] || []), newMessage]
+  const sendMessage = () => {
+    const sendMsg = async () => {
+      console.log("tried to send a message")
+      if (messageInput.trim() && currentUser && selectedGroup) {
+        const request = new Request(`${apiURL}/groups/${selectedGroup.id}/send-message`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + getAuthToken().JWT
+          },
+          body: {
+            "content": messageInput.trim()
+          }
         });
-        setMessageInput('');
-      } catch (err) {
-        console.err(err);
 
+        try {
+          const response = await fetch(request);
+
+          if (!response.ok) {
+            throw new Error(await response.text());
+          }
+
+          const newMessage = {
+            id: await response.json().message_id,
+            user: currentUser,
+            text: messageInput.trim(),
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+
+          setMessages({
+            ...messages,
+            [selectedGroup.id]: [...(messages[selectedGroup.id] || []), newMessage]
+          });
+          setMessageInput('');
+        } catch (err) {
+          console.err(err);
+
+        }
       }
-    }
-    await sendMsg();
-  };}
+      await sendMsg();
+    };
+  }
 
   const goBack = () => {
     setSelectedGroup(null);
