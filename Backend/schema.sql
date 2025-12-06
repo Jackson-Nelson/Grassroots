@@ -112,16 +112,16 @@ CREATE TABLE messages (
 -- EXAMPLE DATA
 
 -- USERS
-INSERT INTO users (user_id, username, email, password_hash, full_name, city, county, state, zip, country, bio) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'celina', 'test@example.com', 'password', 'celina vo', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', 'This is my test biography');
+INSERT INTO users (user_id, username, email, password_hash, full_name, city, county, state, zip, country, bio) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'celina', 'test@example.com', 'password', 'celina vo', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States of America', 'This is my test biography');
 
 -- GROUPS
-INSERT INTO groups (group_id, name, description, city, county, state, zip, country, creator_id) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'Climate Action Bellingham', 'A climate activism group based in Bellingham, WA.', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID);
-INSERT INTO groups (group_id, name, description, city, county, state, zip, country, creator_id) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A12'::UUID, 'Test Group', 'A Test Group From Bham', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID);
+INSERT INTO groups (group_id, name, description, city, county, state, zip, country, creator_id) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'Climate Action Bellingham', 'A climate activism group based in Bellingham, WA.', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States of America', 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID);
+INSERT INTO groups (group_id, name, description, city, county, state, zip, country, creator_id) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A12'::UUID, 'Test Group', 'A Test Group From Bham', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States of America', 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID);
 
 -- GROUP MEMBERS
 INSERT INTO group_members (group_id, user_id, role) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'owner');
 INSERT INTO group_members (group_id, user_id, role) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A12'::UUID, 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'owner');
 
 -- EVENTS
-INSERT INTO events (event_id, group_id, creator_id, title, description, event_date, event_time, address, city, county, state, zip, country, is_cancelled) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'Climate Action Bellingham Meeting', 'A meeting to discuss climate action in Bellingham, WA.', '2025-12-01', '10:00:00', '123 Main St', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', FALSE);
-INSERT INTO events (event_id, group_id, creator_id, title, description, event_date, event_time, address, city, county, state, zip, country, is_cancelled) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A12'::UUID, 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A12'::UUID, 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'Test Event', 'A Test Event From Bham', '2025-12-01', '10:00:00', '123 Main St', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States', FALSE);
+INSERT INTO events (event_id, group_id, creator_id, title, description, event_date, event_time, address, city, county, state, zip, country, is_cancelled) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'Climate Action Bellingham Meeting', 'A meeting to discuss climate action in Bellingham, WA.', '2025-12-01', '10:00:00', '123 Main St', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States of America', FALSE);
+INSERT INTO events (event_id, group_id, creator_id, title, description, event_date, event_time, address, city, county, state, zip, country, is_cancelled) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A12'::UUID, 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A12'::UUID, 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'Test Event', 'A Test Event From Bham', '2025-12-01', '10:00:00', '123 Main St', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States of America', FALSE);
