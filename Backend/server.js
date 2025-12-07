@@ -409,6 +409,69 @@ app.get("/api/group/:groupId", async (req, res) => { // successful response is a
 }
 )
 
+app.post("/api/groups/:groupId/join", auth, async (req, res) => {
+  
+  const groupId = req.params.groupId;
+  const userId = req.user;
+
+  try{
+
+    const groups = await pool.query("SELECT * FROM groups WHERE groups.group_id = $1", [groupId]);
+
+    // group does not exist
+    if(groups.rowCount === 0){
+      return res.sendStatus(400);
+    }
+
+    const membership = await pool.query("SELECT * FROM users JOIN group_members using(user_id) JOIN groups using(group_id) WHERE user_id = $1 AND group_id = $2", [userId, groupId]);
+
+    // check if already a member
+    if(membership.rowCount !== 0){
+      return res.sendStatus(400);
+    }
+
+    await pool.query("INSERT INTO group_members (user_id, group_id) VALUES($1, $2)", [userId, groupId]);
+
+    res.sendStatus(204);
+
+  }catch(err){
+    console.error("Error while joining group:"+ err);
+    res.sendStatus(500);
+  }
+
+})
+app.post("/api/groups/:groupId/leave", auth, async (req, res) => {
+  
+  const groupId = req.params.groupId;
+  const userId = req.user;
+
+  try{
+
+    const groups = await pool.query("SELECT * FROM groups WHERE groups.group_id = $1", [groupId]);
+
+    // group does not exist
+    if(groups.rowCount === 0){
+      return res.sendStatus(400);
+    }
+
+    const membership = await pool.query("SELECT * FROM users JOIN group_members using(user_id) JOIN groups using(group_id) WHERE user_id = $1 AND group_id = $2", [userId, groupId]);
+
+    // check if already a member
+    if(membership.rowCount === 0){
+      return res.sendStatus(400);
+    }
+
+    await pool.query("DELETE FROM group_members where user_id = $1 AND group_id = $2", [userId, groupId]);
+
+    res.sendStatus(200);
+
+  }catch(err){
+    console.error(err);
+    res.sendStatus(500);
+  }
+
+})
+
 // HOMEPAGE: fetch my groups
 app.get("/api/groups/my-groups", auth, async (req, res) => {
   try {
