@@ -59,13 +59,8 @@ export default function GroupPage() {
           ...groupInfo,
           id: groupInfo.group_id
         })
-console.log("ERERRERR");
 
-setSelectedChannel(groupInfo.channels.find((c) => c.name === 'default') || groupInfo.channels[0]);
-console.log("BRBRBRBRBR");
-
-        console.log("channel = " + selectedChannel.name);
-        
+        setSelectedChannel(groupInfo.channels.find((c) => c.name === 'default') || groupInfo.channels[0]);
 
         setIAmMember(!isLoggedOut() && groupInfo.members.find((memb) => memb.user_id === getAuthToken().user.uid))
 
