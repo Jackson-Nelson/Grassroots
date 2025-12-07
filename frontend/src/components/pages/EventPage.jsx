@@ -24,7 +24,7 @@ const EventPage = () => {
         setEvent(data);
         setEditForm(data);
 
-        // Check if user is creator
+        // check if user is creator
         if (!isLoggedOut()) {
           setIsCreator(data.creator_id === getAuthToken().user.uid);
         }
@@ -89,7 +89,7 @@ const EventPage = () => {
         ← Back to Home
       </button>
 
-      {/* Event Header */}
+      {/* event header */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
         <img src={event.image_url || placeholderImg} alt={event.title} className="w-full h-64 object-cover" />
         
@@ -112,6 +112,7 @@ const EventPage = () => {
               </p>
             </div>
             
+            {/* edit button */}
             {isCreator && !isEditing && (
               <button onClick={() => setIsEditing(true)} className="px-4 py-2 bg-green-700 text-white rounded">
                 Edit Event
@@ -119,7 +120,7 @@ const EventPage = () => {
             )}
           </div>
 
-          {/* Date and Time */}
+          {/* date & time */}
           <div className="mb-3">
             <span className="text-gray-700 font-semibold">Date & Time: </span>
             {isEditing ? (
@@ -132,7 +133,7 @@ const EventPage = () => {
             )}
           </div>
 
-          {/* Location */}
+          {/* location */}
           <div>
             <span className="text-gray-700 font-semibold">Location: </span>
             {isEditing ? (
@@ -159,7 +160,7 @@ const EventPage = () => {
         </div>
       </div>
 
-      {/* Description */}
+      {/* description */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 className="text-2xl font-semibold text-green-700 mb-4">About This Event</h2>
         {isEditing ? (
@@ -169,7 +170,7 @@ const EventPage = () => {
         )}
       </div>
 
-      {/* Group Info */}
+      {/* group info */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-semibold text-green-700 mb-4">About the Group</h2>
         <p className="font-semibold mb-2">{event.group_name}</p>

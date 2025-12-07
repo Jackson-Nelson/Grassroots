@@ -5,6 +5,8 @@ import getLocale from '../../utils/getcoords';
 
 const placeholderImg = "https://picsum.photos/400/300";
 
+
+
 const EventCard = ({ event }) => {
   const navigate = useNavigate();
 
@@ -47,40 +49,38 @@ const EventCard = ({ event }) => {
   );
 };
 
-const GroupCard = ({ group }) => {
-  const navigate = useNavigate();
-  const handleClick = () => {
-    navigate(`/groups/${group.group_id}`);
-  };
 
-  return (
-    <div
-      onClick={handleClick}
-      className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[30%] mb-5 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-    >
-      <img
-        src={group.avatar_url || placeholderImg}
-        alt={group.name}
-        className="w-full h-52 object-cover"
-      />
-      <div className="p-4">
-        <h5 className="text-green-700 font-semibold mb-2">
-          {group.name}
-        </h5>
-        {group.description && (
-          <p className="text-gray-600 text-sm mb-1">{group.description}</p>
-        )}
-        <p className="text-gray-500 text-xs">
-          {group.city}, {group.state}
-        </p>
-      </div>
+
+const GroupCard = ({ group }) => (
+  <div className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[30%] mb-5 bg-white shadow-sm">
+    <img
+      src={group.avatar_url || placeholderImg}
+      alt={group.name}
+      className="w-full h-52 object-cover"
+    />
+    <div className="p-4">
+      <h5 className="text-green-700 font-semibold mb-2">
+        {group.name}
+      </h5>
+      {group.description && (
+        <p className="text-gray-600 text-sm mb-1">{group.description}</p>
+      )}
+      <p className="text-gray-500 text-xs">
+        {group.city}, {group.state}
+      </p>
     </div>
-  )
-}
+  </div>
+);
+
+
 
 const Homepage = () => {
-  const [events, setEvents] = useState([]);
-  const [groups, setGroups] = useState([]);
+  const [nearbyEvents, setNearbyEvents] = useState([]);
+  const [myEvents, setMyEvents] = useState([]);
+  const [groupEvents, setGroupEvents] = useState([]);
+  const [myGroups, setMyGroups] = useState([]);
+  const [nearbyGroups, setNearbyGroups] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -128,59 +128,77 @@ const Homepage = () => {
       try {
         setLoading(true);
 
-        // example user for frontend purposes.
-        // const userId = 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'; // celina's userid
-        // const userLocation = {
-        //   city: 'Bellingham',
-        //   state: 'Washington',
-        //   zip: '98225',
-        //   country: 'United States'
-        // };
-
-        /* this will replace the above once the backend is implemented
-        const user = getCurrentUser();
-        const userId = user.id;
-        const userLocation = user.location;
-        */
-
-        /* the "http://localhost:4000" will be replaced with the base URL .env variable once the backend is implemented. need to fix CORS */
-
-        // fetch nearby events TODO: fix the query so that params can be more flexible.
+        // fetch nearby events
         const eventsUrl = new URL(`${apiURL}/events/nearby`);
         eventsUrl.searchParams.append('city', hasUserLoc.city);
         eventsUrl.searchParams.append('state', hasUserLoc.state);
-        // eventsUrl.searchParams.append('zip', userLocation.zip);
         eventsUrl.searchParams.append('country', hasUserLoc.country);
-
-        // Fetch user's groups with user_id
-        // groupsUrl.searchParams.append('user_id', userId);
-
+        
         const eventsRes = await fetch(eventsUrl);
         if (!eventsRes.ok) {
           const errorText = await eventsRes.text();
           throw new Error(`Failed to fetch events: ${eventsRes.status} ${errorText}`);
         }
         const eventsData = await eventsRes.json();
-        setEvents(eventsData);
+        setNearbyEvents(eventsData);
 
-        if (!isLoggedOut()) {
-          const groupsReq = new Request(`${apiURL}/groups/my-groups/`, {
+        if(!isLoggedOut()){
+          // fetch my groups
+          const myGroupsReq = new Request(`${apiURL}/groups/my-groups/`, {
             headers: {
               "Authorization": "Bearer " + getAuthToken().JWT
             }
           });
-
-
-          const groupsRes = await fetch(groupsReq);
-          if (!groupsRes.ok) {
-            if (groupsRes.status !== 403) {
-              const errorText = await groupsRes.text();
-              throw new Error(`Failed to fetch groups: ${groupsRes.status} ${errorText}`);
+          
+          const myGroupsRes = await fetch(myGroupsReq);
+          if (!myGroupsRes.ok) {
+            if(myGroupsRes.status !== 403){
+              const errorText = await myGroupsRes.text();
+              throw new Error(`Failed to fetch groups: ${myGroupsRes.status} ${errorText}`);
             }
           }
+          
+          const myGroupsData = await myGroupsRes.json();
+          setMyGroups(myGroupsData);
 
-          const groupsData = await groupsRes.json();
-          setGroups(groupsData);
+
+          // fetch my events (RSVP'd)
+          const myEventsReq = new Request(`${apiURL}/events/my-events`, {
+            headers: {
+              "Authorization": "Bearer " + getAuthToken().JWT
+            }
+          });
+          
+          const myEventsRes = await fetch(myEventsReq);
+          if (myEventsRes.ok) {
+            const myEventsData = await myEventsRes.json();
+            setMyEvents(myEventsData);
+          }
+
+          // fetch my group events
+          const groupEventsReq = new Request(`${apiURL}/events/my-group-events`, {
+            headers: {
+              "Authorization": "Bearer " + getAuthToken().JWT
+            }
+          });
+          
+          const groupEventsRes = await fetch(groupEventsReq);
+          if (groupEventsRes.ok) {
+            const groupEventsData = await groupEventsRes.json();
+            setGroupEvents(groupEventsData);
+          }
+
+          // fetch nearby groups
+          const nearbyGroupsUrl = new URL(`${apiURL}/groups/nearby`);
+          nearbyGroupsUrl.searchParams.append('city', hasUserLoc.city);
+          nearbyGroupsUrl.searchParams.append('state', hasUserLoc.state);
+          nearbyGroupsUrl.searchParams.append('country', hasUserLoc.country);
+          
+          const nearbyGroupsRes = await fetch(nearbyGroupsUrl);
+          if (nearbyGroupsRes.ok) {
+            const nearbyGroupsData = await nearbyGroupsRes.json();
+            setNearbyGroups(nearbyGroupsData);
+          }
         }
 
       } catch (err) {
@@ -200,7 +218,61 @@ const Homepage = () => {
     <div className="flex flex-col relative">
       {/* MAIN CONTENT */}
       <main className="flex-1 w-full px-8 py-8">
-        {/* EVENTS SECTION */}
+        {/* MY EVENTS SECTION */}
+        {!isLoggedOut() && (
+          <section className="mb-12">
+            <h2 className="text-2xl font-semibold text-green-700 mb-5">
+              My Events →
+            </h2>
+
+            {loading && <p className="text-gray-700">Loading events...</p>}
+            {error && (
+              <p className="text-red-600">
+                Error: {error}
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-5">
+              {!loading && !error && myEvents.length === 0 && (
+                <p className="text-gray-600">
+                  You haven't RSVP'd to any events yet.
+                </p>
+              )}
+              {myEvents.map((event) => (
+                <EventCard key={event.event_id} event={event} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* MY GROUP EVENTS SECTION */}
+        {!isLoggedOut() && (
+          <section className="mb-12">
+            <h2 className="text-2xl font-semibold text-green-700 mb-5">
+              My Group Events →
+            </h2>
+
+            {loading && <p className="text-gray-700">Loading events...</p>}
+            {error && (
+              <p className="text-red-600">
+                Error: {error}
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-5">
+              {!loading && !error && groupEvents.length === 0 && (
+                <p className="text-gray-600">
+                  No upcoming events from your groups.
+                </p>
+              )}
+              {groupEvents.map((event) => (
+                <EventCard key={event.event_id} event={event} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* EVENTS NEAR ME SECTION */}
         <section className="mb-12">
           <h2 className="text-2xl font-semibold text-green-700 mb-5">
             Events Near Me →
@@ -214,57 +286,77 @@ const Homepage = () => {
           )}
 
           <div className="flex flex-wrap gap-5">
-            {!loading && !error && events.length === 0 && (
+            {!loading && !error && nearbyEvents.length === 0 && (
               <p className="text-gray-600">
                 No upcoming events found.
               </p>
             )}
-            {events.map((event) => (
+            {nearbyEvents.map((event) => (
               <EventCard key={event.event_id} event={event} />
             ))}
           </div>
         </section>
 
-        {/* GROUPS SECTION */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold text-green-700 mb-5">
-            My Groups →
-          </h2>
+        {/* MY GROUPS SECTION */}
+        {!isLoggedOut() && (
+          <section className="mb-12">
+            <h2 className="text-2xl font-semibold text-green-700 mb-5">
+              My Groups →
+            </h2>
 
-          {loading && <p className="text-gray-700">Loading groups...</p>}
-          {error && (
-            <p className="text-red-600">
-              Error: {error}
-            </p>
-          )}
-
-          <div className="flex flex-wrap gap-5">
-            {!loading && !error && groups.length === 0 && (
-              <p className="text-gray-600">
-                You haven't joined any groups yet.
+            {loading && <p className="text-gray-700">Loading groups...</p>}
+            {error && (
+              <p className="text-red-600">
+                Error: {error}
               </p>
             )}
-            {groups.map((group) => (
-              <GroupCard key={group.group_id} group={group} />
-            ))}
-          </div>
-        </section>
+
+            <div className="flex flex-wrap gap-5">
+              {!loading && !error && myGroups.length === 0 && (
+                <p className="text-gray-600">
+                  You haven't joined any groups yet.
+                </p>
+              )}
+              {myGroups.map((group) => (
+                <GroupCard key={group.group_id} group={group} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* GROUPS NEAR ME SECTION */}
+        {!isLoggedOut() && (
+          <section className="mb-12">
+            <h2 className="text-2xl font-semibold text-green-700 mb-5">
+              Groups Near Me →
+            </h2>
+
+            {loading && <p className="text-gray-700">Loading groups...</p>}
+            {error && (
+              <p className="text-red-600">
+                Error: {error}
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-5">
+              {!loading && !error && nearbyGroups.length === 0 && (
+                <p className="text-gray-600">
+                  No groups found in your area.
+                </p>
+              )}
+              {nearbyGroups.map((group) => (
+                <GroupCard key={group.group_id} group={group} />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
-      {/* footer */}
+      {/* FOOTER */}
       <footer className="fixed bottom-0 right-0 px-8 py-5 text-right z-10">
         <div className="flex flex-col gap-1">
           <a href="#" className="text-green-700 no-underline hover:underline">
             About Us
-          </a>
-          <a href="#" className="text-green-700 no-underline hover:underline">
-            Contact
-          </a>
-          <a href="#" className="text-green-700 no-underline hover:underline">
-            Tutorial
-          </a>
-          <a href="#" className="text-green-700 no-underline hover:underline">
-            Language ⌄
           </a>
         </div>
       </footer>
