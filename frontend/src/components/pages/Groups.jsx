@@ -13,7 +13,7 @@ export default function Groups() {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [memberName, setMemberName] = useState('');
   const [tagInput, setTagInput] = useState('');
-  const [messages, setMessages] = useState({});
+  const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [currentUser, setCurrentUser] = useState('');
   const messagesEndRef = useRef(null);
@@ -85,8 +85,21 @@ export default function Groups() {
             user: msg.username,
             text: msg.content,
             timestamp: msg.created_at,
-          }
+          };
         }))
+
+        console.log(msgs)
+        console.log(msgs.map((msg) => {
+          return {
+            id: msg.message_id,
+            user: msg.username,
+            text: msg.content,
+            timestamp: msg.created_at,
+          };
+        })
+      )
+      console.log(messages);
+
       } catch (err) {
         console.error(err);
       }
@@ -109,7 +122,7 @@ export default function Groups() {
         name: newGroup.name,
         desc: newGroup.description,
         tags: newGroup.tags,
-        creator_id: getAuthToken().uid
+        // creator_id: getAuthToken().uid
       })
     });
 
@@ -126,7 +139,7 @@ export default function Groups() {
       };
 
       setGroups([...groups, newGroupData]);
-      setMessages({ ...messages, [newGroupData.id]: [] });
+      setMessages([ ...messages]);
       setNewGroup({ name: '', description: '', tags: [] });
       setTagInput('');
       setShowCreateModal(false);
@@ -142,7 +155,7 @@ export default function Groups() {
       };
 
       setGroups([...groups, newGroupData]);
-      setMessages({ ...messages, [newGroupData.id]: [] });
+      setMessages([ ...messages ]);
       setNewGroup({ name: '', description: '', tags: [] });
       setTagInput('');
       setShowCreateModal(false);
@@ -177,9 +190,9 @@ export default function Groups() {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + getAuthToken().JWT
           },
-          body: {
-            "content": messageInput.trim()
-          }
+          body: JSON.stringify({
+            content: messageInput.trim()
+          })
         });
 
         try {
@@ -196,18 +209,17 @@ export default function Groups() {
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
 
-          setMessages({
+          setMessages([
             ...messages,
-            [selectedGroup.id]: [...(messages[selectedGroup.id] || []), newMessage]
-          });
+          ]);
           setMessageInput('');
         } catch (err) {
           console.err(err);
 
         }
       }
-      await sendMsg();
     };
+    sendMsg();
   }
 
   const goBack = () => {
@@ -255,7 +267,8 @@ export default function Groups() {
               {groups.map(group => (
                 <div
                   key={group.id}
-                  onClick={() => setSelectedGroup(group)}
+                  // onClick={() => setSelectedGroup(group)}
+                  onClick={()=>window.location.href= `/groups/${group.id}`}
                   className="bg-white rounded-lg p-6 cursor-pointer shadow-md hover:shadow-xl transition-shadow"
                 >
                   <div className="flex items-start gap-3 mb-3">
@@ -390,7 +403,7 @@ export default function Groups() {
   }
 
   // Group Detail View with Chat
-  const groupMessages = messages[selectedGroup.id] || [];
+  const groupMessages = messages;
   const isMember = selectedGroup.members.includes(currentUser);
 
   return (

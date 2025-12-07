@@ -78,43 +78,7 @@ app.get("/api/me", auth, async (req, res) => {
   res.status(200).json(result.rows[0]);
 })
 
-app.post("/api/register", async (req, res) => {
-
-
-  const { email, username, password, city, state, country } = req.body
-
-  // verify user does not already exist
-  const result = await pool.query('SELECT * FROM users WHERE email = $1', [email])
-
-  if (result.rowCount != 0) {
-    return res.status(400).send('Email already registered.');
-  }
-
-
-  // username cant be shorter than three. this should also be checked client-side
-  if (username.length <= 3) {
-    return res.status(400).send("username is too short.");
-  }
-
-  // hash password??
-
-  // create new user
-  const newUser = await pool.query(`INSERT INTO users (email, username, password_hash, city, state, country, created_at) VALUES($1, $2, $3, $4, $5, $6, NOW()) RETURNING user_id`, [email, username, password, city, state, country])
-
-  const user_id = newUser.rows[0].user_id;
-
-
-  // can add options such as: expires in 1 hour
-  // generates session id that validates this user is logged in 
-  const token = jwt.sign({ uid: user_id }, JWT_Key)
-
-
-  // inform client of success and their new session and user ids.
-  res.status(201).json({ JWT: token, uid: user_id, success: "yipee" });
-})
-
-
-app.post("/api/login", async (req, res) => {
+const login = async (req, res) => {
   const { email, password } = req.body
 
   // verify user does already exist
@@ -141,8 +105,49 @@ app.post("/api/login", async (req, res) => {
 
 
   // inform client of success and their new session and user ids.
-  res.status(201).json({ JWT: token, uid: user_id, success: "yipee" });
-})
+  res.status(201).json({ JWT: token, user: { uid: user.user_id, name: user.username, email: user.email }, success: "yipee" });
+}
+
+const register = async (req, res, next) => {
+
+  const { email, username, password, city, state, country } = req.body
+
+  // verify user does not already exist
+  const result = await pool.query('SELECT * FROM users WHERE email = $1', [email])
+
+  if (result.rowCount != 0) {
+    return res.status(400).send('Email already registered.');
+  }
+
+
+  // username cant be shorter than three. this should also be checked client-side
+  if (username.length < 3) {
+    return res.status(400).send("username is too short.");
+  }
+
+  // hash password??
+
+  // create new user
+  const newUser = await pool.query(`INSERT INTO users (email, username, password_hash, city, state, country, created_at) VALUES($1, $2, $3, $4, $5, $6, NOW()) RETURNING user_id`, [email, username, password, city, state, country])
+
+  const user_id = newUser.rows[0].user_id;
+
+
+  // can add options such as: expires in 1 hour
+  // generates session id that validates this user is logged in 
+  const token = jwt.sign({ uid: user_id }, JWT_Key)
+
+
+  // inform client of success and their new session and user ids.
+  // res.status(201).json({ JWT: token, uid: user_id, success: "yipee" });
+
+  // move on to logging in
+  next();
+}
+
+app.post("/api/register", register, login)
+
+app.post("/api/login", login);
 
 // event routes
 app.get("/api/events/nearby", async (req, res) => {
@@ -283,7 +288,62 @@ app.put("/api/events/:eventId", auth, async (req, res) => {
 });
 
 
+// abstracted group parsing
+const getGroupMembers = async (gid) => {
+
+  // get group members
+  const memberships = await pool.query(
+    'SELECT username, email, user_id FROM groups JOIN group_members using(group_id) JOIN users using(user_id) WHERE groups.group_id = $1',
+    [gid]
+  )
+
+  return memberships.rows;//.map((membership) => membership.username);
+}
+const getGroupTags = async (gid) => {
+
+  // get group tags
+  const taggings = await pool.query(
+    'SELECT tag FROM tags JOIN groups ON tags.gid = groups.group_id WHERE groups.group_id = $1',
+    [gid]
+  )
+  return taggings.rows.map((tagging) => tagging.tag)
+}
+const getGroupData = async (gid) => {
+  
+    const result = await pool.query("SELECT * FROM groups WHERE groups.group_id = $1", [gid]);
+
+    const tags = await getGroupTags(gid);
+    const members = await getGroupMembers(gid);
+
+    return result.rowCount > 0 ? {...result.rows[0], tags:tags, members:members} : null;
+}
+
+
 // group routes
+app.get("/api/group/:groupId", async (req, res) => { // successful response is a group with all db fields + tags + members
+  const groupId = req.params.groupId;
+  console.log("serving group: " + groupId);
+
+  try {
+
+    const group = await getGroupData(groupId);
+
+    // no group with that id?
+    if (!group) {
+      return res.sendStatus(404);
+    }
+
+    console.log(group);
+    
+    res.status(200).json(group);
+
+  } catch (err) {
+    console.error(err);
+    return res.sendStatus(500);
+  }
+}
+)
+
 app.get("/api/groups/my-groups", auth, async (req, res) => {
   try {
     const user_id = req.user;
@@ -390,21 +450,21 @@ app.post("/api/groups/create", auth, async (req, res) => {
 })
 
 app.get("/api/groups/message-history", async (req, res) => {
-  
+
   const groupId = req.query.groupId;
 
-console.log("Getting message history for group: " + groupId);
+  console.log("Getting message history for group: " + groupId);
 
 
   // check if group exists
   let results = await pool.query('SELECT group_id FROM groups WHERE groups.group_id = $1', [groupId]);
-  if(results.rowCount === 0){
+  if (results.rowCount === 0) {
     return res.sendStatus(404);
   }
 
-  results = await pool.query('SELECT * FROM messages JOIN groups ON messages.group_id = groups.group_id JOIN users ON messages.user_id = users.user_id WHERE groups.group_id = $1', [groupId]);
+  results = await pool.query('SELECT * FROM messages JOIN groups using(group_id) JOIN users using(user_id) WHERE groups.group_id = $1', [groupId]);
   const msgs = results.rows;
-console.log(msgs[0]);
+  console.log(msgs[0]);
 
   return res.status(200).json(msgs);
 
@@ -412,20 +472,20 @@ console.log(msgs[0]);
 
 // must be logged in to send a message
 app.post("/api/groups/:groupId/send-message", auth, async (req, res) => {
-    
+
   const groupId = req.params.groupId;
-  const sender = req.userId;
-  const {content} = req.body;
+  const sender = req.user;
+  const { content } = req.body;
 
   // check if group exists
   let results = await pool.query('SELECT group_id FROM groups WHERE groups.group_id = $1', [groupId]);
-  if(results.rowCount === 0){
+  if (results.rowCount === 0) {
     return res.sendStatus(404);
   }
 
   results = await pool.query('INSERT INTO messages (group_id, user_id, content, created_at) VALUES($1, $2, $3, NOW()) RETURNING message_id', [groupId, sender, content]);
 
-  if(results.rowCount === 0){
+  if (results.rowCount === 0) {
     return res.sendStatus(500);
   }
 
