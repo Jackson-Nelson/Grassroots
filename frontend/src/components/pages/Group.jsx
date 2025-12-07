@@ -59,13 +59,18 @@ export default function GroupPage() {
           ...groupInfo,
           id: groupInfo.group_id
         })
+console.log("ERERRERR");
 
-        setSelectedChannel(groupInfo.channels.find((c) => c.name === 'default'));
+setSelectedChannel(groupInfo.channels.find((c) => c.name === 'default') || groupInfo.channels[0]);
+console.log("BRBRBRBRBR");
+
+        console.log("channel = " + selectedChannel.name);
+        
 
         setIAmMember(!isLoggedOut() && groupInfo.members.find((memb) => memb.user_id === getAuthToken().user.uid))
 
       } catch (err) {
-        console.err("Error fetching group info: " + err);
+        console.error("Error fetching group info: " + err);
       }
     }
 
@@ -172,7 +177,7 @@ export default function GroupPage() {
           ]);
           setMessageInput('');
         } catch (err) {
-          console.err(err);
+          console.error(err);
 
         }
       }
