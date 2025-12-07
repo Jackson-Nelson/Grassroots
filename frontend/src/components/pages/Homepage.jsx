@@ -25,7 +25,7 @@ const EventCard = ({ event }) => {
   };
 
   return (
-    <div 
+    <div
       onClick={handleClick}
       className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[30%] mb-5 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
     >
@@ -105,6 +105,7 @@ const Homepage = () => {
             window.location.href = "/sign-in";
             throw new Error('Failed getting your location: ' + response.text());
           }
+          throw new Error('Failed getting location')
         }
 
         const user = await response.json();
@@ -115,9 +116,9 @@ const Homepage = () => {
       }
     }
 
-    if(isLoggedOut()){
+    if (isLoggedOut()) {
       getLocale(setUserLoc);
-    }else{
+    } else {
       fetchLoc();
     }
   }, [])

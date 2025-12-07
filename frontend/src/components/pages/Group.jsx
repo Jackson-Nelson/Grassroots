@@ -178,8 +178,7 @@ export default function GroupPage() {
   }
 
   const goBack = () => {
-    setSelectedGroup(null);
-    setMessageInput('');
+    window.location.href = "/groups";
   };
 
 if(!selectedGroup){
