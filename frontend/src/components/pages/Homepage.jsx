@@ -34,7 +34,7 @@ const EventCard = ({ event }) => {
           className="w-full h-24 object-cover"
         />
         <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded shadow-sm">
-          <p className="text-xs font-semibold text-gray-700">{eventDate}</p>
+          <p className="text-xs font-semibold text-gray-700">{event.eventDate}</p>
         </div>
       </div>
       <div className="p-2">
@@ -50,8 +50,17 @@ const EventCard = ({ event }) => {
   );
 };
 
-const GroupCard = ({ group }) => (
-  <div className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[18%] mb-2 bg-white shadow-sm">
+const GroupCard = ({ group }) => {
+  const navigate = useNavigate();
+  const handleClick = () => {
+    navigate(`/groups/${group.group_id}`);
+  };
+
+  return (
+    <div
+      onClick={handleClick}
+      className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[30%] mb-5 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+    >
     <img
       src={group.avatar_url || placeholderImg}
       alt={group.name}
