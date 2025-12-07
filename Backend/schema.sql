@@ -78,6 +78,7 @@ CREATE TABLE events (
     state VARCHAR(255),
     zip INTEGER,
     country VARCHAR(255) NOT NULL,
+    image_url TEXT,
     is_cancelled BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -126,7 +127,9 @@ CREATE TABLE messages (
 
 
 
-
+-- CHANGES...
+ALTER TABLE events 
+ADD COLUMN IF NOT EXISTS image_url VARCHAR(500);
 
 
 -- EXAMPLE DATA
