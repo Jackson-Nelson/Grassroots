@@ -149,7 +149,11 @@ app.post("/api/register", register, login)
 
 app.post("/api/login", login);
 
-// event routes
+
+
+// EVENT ROUTES //
+
+// HOMEPAGE: get events nearby
 app.get("/api/events/nearby", async (req, res) => {
   try {
     const { city, state, country } = req.query
@@ -168,7 +172,49 @@ app.get("/api/events/nearby", async (req, res) => {
   }
 });
 
-// FOR EVENT PAGES: fetching individual event info
+// HOMEPAGE: get my events (RSVP'd to)
+app.get("/api/events/my-events", auth, async (req, res) => {
+  try {
+    const user_id = req.user;
+
+    const events = await pool.query(
+      `SELECT e.* FROM events e
+       JOIN event_attendees ea ON e.event_id = ea.event_id
+       WHERE ea.user_id = $1 AND ea.rsvp_status = 'yes'
+       ORDER BY e.event_date ASC`,
+      [user_id]
+    );
+
+    res.json(events.rows);
+
+  } catch (err) {
+    console.error('Error fetching user events:', err);
+    res.status(500).json({ error: 'Failed to fetch events', details: err.message });
+  }
+});
+
+// HOMEPAGE: get my group's events
+app.get("/api/events/my-group-events", auth, async (req, res) => {
+  try {
+    const user_id = req.user;
+
+    const events = await pool.query(
+      `SELECT DISTINCT e.* FROM events e
+       JOIN group_members gm ON e.group_id = gm.group_id
+       WHERE gm.user_id = $1
+       ORDER BY e.event_date ASC`,
+      [user_id]
+    );
+
+    res.json(events.rows);
+
+  } catch (err) {
+    console.error('Error fetching group events:', err);
+    res.status(500).json({ error: 'Failed to fetch events', details: err.message });
+  }
+});
+
+// EVENT PAGES: fetching individual event info
 app.get("/api/events/:eventId", async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -197,7 +243,7 @@ app.get("/api/events/:eventId", async (req, res) => {
   }
 });
 
-// update an event (requires auth, only creator can update)
+// EVENT PAGES: update an event (requires auth, only creator can update)
 app.put("/api/events/:eventId", auth, async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -288,7 +334,8 @@ app.put("/api/events/:eventId", auth, async (req, res) => {
 });
 
 
-// abstracted group parsing
+
+// ABSTRACTED GROUP PARSING
 const getGroupMembers = async (gid) => {
 
   // get group members
@@ -319,7 +366,10 @@ const getGroupData = async (gid) => {
 }
 
 
-// group routes
+
+// GROUP ROUTES //
+
+// INDIVIDUAL GROUP PAGES
 app.get("/api/group/:groupId", async (req, res) => { // successful response is a group with all db fields + tags + members
   const groupId = req.params.groupId;
   console.log("serving group: " + groupId);
@@ -344,6 +394,7 @@ app.get("/api/group/:groupId", async (req, res) => { // successful response is a
 }
 )
 
+// HOMEPAGE: fetch my groups
 app.get("/api/groups/my-groups", auth, async (req, res) => {
   try {
     const user_id = req.user;
@@ -390,10 +441,25 @@ app.get("/api/groups/my-groups", auth, async (req, res) => {
   }
 });
 
+// HOMEPAGE: get groups near me
+app.get("/api/groups/nearby", async (req, res) => {
+  try {
+    const { city, state, country } = req.query;
 
+    const groups = await pool.query(
+      'SELECT * FROM groups WHERE city = $1 AND state = $2 AND country = $3',
+      [city, state, country]
+    );
 
+    res.json(groups.rows);
 
-// create new group, requires authentication
+  } catch (err) {
+    console.error('Error fetching nearby groups:', err);
+    res.status(500).json({ error: 'Failed to fetch groups', details: err.message });
+  }
+});
+
+// GROUPS PAGE: create new group, requires authentication
 app.post("/api/groups/create", auth, async (req, res) => {
   const { name, desc, tags } = req.body;
   const creator_id = req.user;
@@ -448,6 +514,10 @@ app.post("/api/groups/create", auth, async (req, res) => {
   res.status(201).json({ success: 'yipee', gid: group_id });
 
 })
+
+
+
+// MESSAGE ROUTES //
 
 app.get("/api/groups/message-history", async (req, res) => {
 
