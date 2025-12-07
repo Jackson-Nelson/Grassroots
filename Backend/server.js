@@ -415,6 +415,69 @@ app.get("/api/group/:groupId", async (req, res) => { // successful response is a
 }
 )
 
+app.post("/api/groups/:groupId/join", auth, async (req, res) => {
+  
+  const groupId = req.params.groupId;
+  const userId = req.user;
+
+  try{
+
+    const groups = await pool.query("SELECT * FROM groups WHERE groups.group_id = $1", [groupId]);
+
+    // group does not exist
+    if(groups.rowCount === 0){
+      return res.sendStatus(400);
+    }
+
+    const membership = await pool.query("SELECT * FROM users JOIN group_members using(user_id) JOIN groups using(group_id) WHERE user_id = $1 AND group_id = $2", [userId, groupId]);
+
+    // check if already a member
+    if(membership.rowCount !== 0){
+      return res.sendStatus(400);
+    }
+
+    await pool.query("INSERT INTO group_members (user_id, group_id) VALUES($1, $2)", [userId, groupId]);
+
+    res.sendStatus(204);
+
+  }catch(err){
+    console.error("Error while joining group:"+ err);
+    res.sendStatus(500);
+  }
+
+})
+app.post("/api/groups/:groupId/leave", auth, async (req, res) => {
+  
+  const groupId = req.params.groupId;
+  const userId = req.user;
+
+  try{
+
+    const groups = await pool.query("SELECT * FROM groups WHERE groups.group_id = $1", [groupId]);
+
+    // group does not exist
+    if(groups.rowCount === 0){
+      return res.sendStatus(400);
+    }
+
+    const membership = await pool.query("SELECT * FROM users JOIN group_members using(user_id) JOIN groups using(group_id) WHERE user_id = $1 AND group_id = $2", [userId, groupId]);
+
+    // check if already a member
+    if(membership.rowCount === 0){
+      return res.sendStatus(400);
+    }
+
+    await pool.query("DELETE FROM group_members where user_id = $1 AND group_id = $2", [userId, groupId]);
+
+    res.sendStatus(200);
+
+  }catch(err){
+    console.error(err);
+    res.sendStatus(500);
+  }
+
+})
+
 // HOMEPAGE: fetch my groups
 app.get("/api/groups/my-groups", auth, async (req, res) => {
   try {
@@ -497,7 +560,7 @@ app.post("/api/groups/create", auth, async (req, res) => {
   }
 
 
-  let result = await pool.query("SELECT city, country FROM users WHERE user_id = $1", [creator_id]);
+  let result = await pool.query("SELECT city, state, country FROM users WHERE user_id = $1", [creator_id]);
 
   // check if result faild somehow
   if (result.rowCount === 0) {
@@ -507,20 +570,21 @@ app.post("/api/groups/create", auth, async (req, res) => {
   console.log(JSON.stringify(result));
 
   // city/country of group should equal those of the creator
-  const [city, country] = [result.rows[0].city, result.rows[0].country];
+  const [city, state, country] = [result.rows[0].city, result.rows[0].state, result.rows[0].country];
 
   console.log('city:' + city);
+  console.log('state:' + state);
   console.log('country:' + country);
 
   // check if group by that name already exists
-  result = await pool.query('SELECT * FROM groups where name = $1 and city = $2 and country = $3', [name, city, country]);
+  result = await pool.query('SELECT * FROM groups where name = $1 and city = $2 and state = $3 AND country = $4', [name, city, state, country]);
   if (result.rowCount !== 0) {
     return res.status(400).send("group already exists!");
   }
 
 
   //all checks passed, create group
-  result = await pool.query("INSERT INTO groups (name, description, city, country, creator_id, created_at) VALUES($1, $2, $3, $4, $5, NOW()) RETURNING group_id", [name, desc, city, country, creator_id])
+  result = await pool.query("INSERT INTO groups (name, description, city, state, country, creator_id, created_at) VALUES($1, $2, $3, $4, $5, $6, NOW()) RETURNING group_id", [name, desc, city, state, country, creator_id])
 
   const group_id = result.rows[0].group_id;
 

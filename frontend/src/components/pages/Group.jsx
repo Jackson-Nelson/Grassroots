@@ -128,15 +128,59 @@ export default function GroupPage() {
 
 
   const joinGroup = (groupId) => {
-    if (memberName.trim()) {
+    const joinTheGroup = async () => {
 
-      // setSelectedGroup({...selectedGroup, members: [...selectedGroup.members, getAuthToken().user.username]})
-      // setCurrentUser(memberName);
-      setIAmMember(true);
+      const request = new Request(`${apiURL}/groups/${groupId}/join`, {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + getAuthToken().JWT
+        }
+      })
+      try {
+        const response = await fetch(request);
 
-      setMemberName('');
-    }
-  };
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+
+        setIAmMember(true);
+        setSelectedGroup({...selectedGroup, members:[...selectedGroup.members, getAuthToken().user]})
+
+
+      } catch (err) {
+        console.error("Error joining group:" + err);
+      }
+
+    };
+    joinTheGroup();
+  }
+  const leaveGroup = (groupId) => {
+    const leaveTheGroup = async () => {
+
+      const request = new Request(`${apiURL}/groups/${groupId}/leave`, {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + getAuthToken().JWT
+        }
+      })
+      try {
+        const response = await fetch(request);
+
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+
+        setIAmMember(false);
+        setSelectedGroup({...selectedGroup, members:selectedGroup.members.filter(memb => memb.user_id != getAuthToken().user.uid)})
+
+
+      } catch (err) {
+        console.error("Error leaveing group:" + err);
+      }
+
+    };
+    leaveTheGroup();
+  }
 
   const sendMessage = () => {
     const sendMsg = async () => {
@@ -243,30 +287,54 @@ export default function GroupPage() {
                 </div>
               )}
 
-              {!isMember && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Join this group
-                  </label>
-                  <div className="flex flex-col gap-2">
-                    <input
-                      type="text"
-                      value={memberName}
-                      onChange={(e) => setMemberName(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && joinGroup(selectedGroup.id)}
-                      placeholder="Enter your name..."
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                    <button
-                      onClick={() => joinGroup(selectedGroup.id)}
-                      className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
-                    >
-                      <UserPlus className="w-4 h-4" />
-                      Join Group
-                    </button>
+              {isLoggedOut() ?
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sign in to join groups!
+                </label>
+
+                : !isMember ? (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Join this group
+                    </label>
+                    <div className="flex flex-col gap-2">
+                      {/* <input
+                        type="text"
+                        value={memberName}
+                        onChange={(e) => setMemberName(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && joinGroup(selectedGroup.id)}
+                        placeholder="Enter your name..."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      /> */}
+                      <button
+                        onClick={() => joinGroup(selectedGroup.id)}
+                        className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Join Group
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )
+              :
+                                  <div className="flex flex-col gap-2">
+                      {/* <input
+                        type="text"
+                        value={memberName}
+                        onChange={(e) => setMemberName(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && joinGroup(selectedGroup.id)}
+                        placeholder="Enter your name..."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      /> */}
+                      <button
+                        onClick={() => leaveGroup(selectedGroup.id)}
+                        className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Leave Group
+                      </button>
+                    </div>
+}
             </div>
           </div>
 
