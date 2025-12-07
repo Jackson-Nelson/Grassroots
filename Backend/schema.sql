@@ -97,18 +97,38 @@ CREATE TABLE event_attendees (
     UNIQUE(event_id, user_id)
 );
 
+
+CREATE TABLE channels (
+    channel_id uuid DEFAULT uuidv4(),
+    group_id uuid NOT NULL,
+    name VARCHAR(255) NOT NULL,
+
+    PRIMARY KEY(group_id, name),
+    FOREIGN KEY(group_id) REFERENCES groups(group_id),
+    UNIQUE(group_id, name),
+    UNIQUE(channel_id)
+);
+
+
 -- Messages table (group chat)
 CREATE TABLE messages (
-    message_id uuid DEFAULT uuidv4 () PRIMARY KEY,
-    group_id uuid NOT NULL,
+    message_id uuid DEFAULT uuidv4() PRIMARY KEY,
+    channel_id uuid NOT NULL,
     user_id uuid NOT NULL,
     content TEXT NOT NULL,
     is_edited BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     edited_at TIMESTAMP,
-    FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE,
+    FOREIGN KEY (channel_id) REFERENCES channels(channel_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
+
+
+
+
+
+
+
 -- EXAMPLE DATA
 
 -- USERS

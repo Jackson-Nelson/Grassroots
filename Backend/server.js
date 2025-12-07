@@ -308,19 +308,34 @@ const getGroupTags = async (gid) => {
   )
   return taggings.rows.map((tagging) => tagging.tag)
 }
+
+const getGroupChannels = async (gid) => {
+
+  // get group tags
+  const channels = await pool.query(
+    'SELECT channel_id, channels.name FROM channels JOIN groups using(group_id) WHERE groups.group_id = $1',
+    [gid]
+  )
+  return channels.rows;//.map((channel) => channels.channe)
+}
+
 const getGroupData = async (gid) => {
-  
-    const result = await pool.query("SELECT * FROM groups WHERE groups.group_id = $1", [gid]);
 
-    const tags = await getGroupTags(gid);
-    const members = await getGroupMembers(gid);
+  const result = await pool.query("SELECT * FROM groups WHERE groups.group_id = $1", [gid]);
 
-    return result.rowCount > 0 ? {...result.rows[0], tags:tags, members:members} : null;
+  return (result.rowCount === 0)
+    ? null
+    : {
+      ...result.rows[0],
+      tags: await getGroupTags(gid),
+      members: await getGroupMembers(gid),
+      channels: await getGroupChannels(gid)
+    }
 }
 
 
 // group routes
-app.get("/api/group/:groupId", async (req, res) => { // successful response is a group with all db fields + tags + members
+app.get("/api/group/:groupId", async (req, res) => { // successful response is a group with all db fields + tags + members + channels
   const groupId = req.params.groupId;
   console.log("serving group: " + groupId);
 
@@ -334,7 +349,7 @@ app.get("/api/group/:groupId", async (req, res) => { // successful response is a
     }
 
     console.log(group);
-    
+
     res.status(200).json(group);
 
   } catch (err) {
@@ -445,24 +460,27 @@ app.post("/api/groups/create", auth, async (req, res) => {
   // creator is first member by default
   await pool.query("INSERT INTO group_members (group_id, user_id, role) VALUES($1, $2, 'owner')", [group_id, creator_id]);
 
+  // every group has a default text channel
+  await pool.query("INSERT INTO channels (group_id, name) VALUES($1, 'default')", [group_id]);
+
   res.status(201).json({ success: 'yipee', gid: group_id });
 
 })
 
-app.get("/api/groups/message-history", async (req, res) => {
+app.get("/api/messages/history/:channelId", async (req, res) => {
 
-  const groupId = req.query.groupId;
+  const channelId = req.params.channelId;
 
-  console.log("Getting message history for group: " + groupId);
+  console.log("Getting message history for group: " + channelId);
 
 
   // check if group exists
-  let results = await pool.query('SELECT group_id FROM groups WHERE groups.group_id = $1', [groupId]);
+  let results = await pool.query('SELECT channel_id FROM channels WHERE channels.channel_id = $1', [channelId]);
   if (results.rowCount === 0) {
     return res.sendStatus(404);
   }
 
-  results = await pool.query('SELECT * FROM messages JOIN groups using(group_id) JOIN users using(user_id) WHERE groups.group_id = $1', [groupId]);
+  results = await pool.query('SELECT * FROM messages JOIN channels using(channel_id) JOIN users using(user_id) WHERE channels.channel_id = $1', [channelId]);
   const msgs = results.rows;
   console.log(msgs[0]);
 
@@ -471,19 +489,19 @@ app.get("/api/groups/message-history", async (req, res) => {
 })
 
 // must be logged in to send a message
-app.post("/api/groups/:groupId/send-message", auth, async (req, res) => {
+app.post("/api/messages/:channelId/send", auth, async (req, res) => {
 
-  const groupId = req.params.groupId;
+  const channelId = req.params.channelId;
   const sender = req.user;
   const { content } = req.body;
 
-  // check if group exists
-  let results = await pool.query('SELECT group_id FROM groups WHERE groups.group_id = $1', [groupId]);
+  // check if channel exists
+  let results = await pool.query('SELECT channel_id FROM channels WHERE channels.channel_id = $1', [channelId]);
   if (results.rowCount === 0) {
     return res.sendStatus(404);
   }
 
-  results = await pool.query('INSERT INTO messages (group_id, user_id, content, created_at) VALUES($1, $2, $3, NOW()) RETURNING message_id', [groupId, sender, content]);
+  results = await pool.query('INSERT INTO messages (channel_id, user_id, content, created_at) VALUES($1, $2, $3, NOW()) RETURNING message_id', [channelId, sender, content]);
 
   if (results.rowCount === 0) {
     return res.sendStatus(500);

@@ -63,7 +63,7 @@ export default function Groups() {
   useEffect(() => {
     const getMessageHistory = async () => {
       console.log(`getting msg history from group: ${selectedGroup.id}`)
-      const request = new Request(`${apiURL}/groups/message-history?groupId=${selectedGroup.id}`,
+      const request = new Request(`${apiURL}//message-history?channelId=${selectedGroup.id}`,
         {
           headers: {
             "Authorization": "Bearer " + getAuthToken().JWT
@@ -106,7 +106,7 @@ export default function Groups() {
     }
 
     // only get message history if selectedGroup is valid
-    if (selectedGroup) {
+    if (false) {
       getMessageHistory();
     }
   }, [selectedGroup]);

@@ -25,12 +25,16 @@ export default function Header() {
           if (response.status === 401) {
             window.location.href = "/sign-in";
             throw new Error('Failed getting user info');
+          }else if(response.status === 403){
+            return;
           }
+          throw new Error("Failed to get user info")
         }
 
         const user = await response.json();
         setUsername(user.username);
       } catch (err) {
+       
         console.error(err);
       }
     };

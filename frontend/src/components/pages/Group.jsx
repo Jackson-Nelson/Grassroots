@@ -12,6 +12,7 @@ import { useParams } from 'react-router-dom';
 export default function GroupPage() {
   // const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [selectedChannel, setSelectedChannel] = useState(null);
   const [memberName, setMemberName] = useState('');
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
@@ -59,6 +60,8 @@ export default function GroupPage() {
           id: groupInfo.group_id
         })
 
+        setSelectedChannel(groupInfo.channels.find((c) => c.name === 'default'));
+
         setIAmMember(!isLoggedOut() && groupInfo.members.find((memb) => memb.user_id === getAuthToken().user.uid))
 
       } catch (err) {
@@ -74,8 +77,8 @@ export default function GroupPage() {
   // load messages when I open a group
   useEffect(() => {
     const getMessageHistory = async () => {
-      console.log(`getting msg history from group: ${selectedGroup.id}`)
-      const request = new Request(`${apiURL}/groups/message-history?groupId=${selectedGroup.id}`,
+      console.log(`getting msg history from channel: ${selectedChannel.name}`)
+      const request = new Request(`${apiURL}/messages/history/${selectedChannel.channel_id}`,
         {
           headers: {
             "Authorization": "Bearer " + getAuthToken().JWT
@@ -94,22 +97,22 @@ export default function GroupPage() {
         setMessages(msgs.map((msg) => {
           return {
             id: msg.message_id,
-            user: {username:msg.username, uid:msg.user_id, email:msg.email},
+            user: { username: msg.username, uid: msg.user_id, email: msg.email },
             text: msg.content,
             timestamp: msg.created_at,
           };
         }))
 
-        console.log(msgs)
-        console.log(msgs.map((msg) => {
-          return {
-            id: msg.message_id,
-            user: {username:msg.username, uid:msg.user_id, email:msg.email},
-            text: msg.content,
-            timestamp: msg.created_at,
-          };
-        })
-        )
+        // console.log(msgs)
+        // console.log(msgs.map((msg) => {
+        //   return {
+        //     id: msg.message_id,
+        //     user: { username: msg.username, uid: msg.user_id, email: msg.email },
+        //     text: msg.content,
+        //     timestamp: msg.created_at,
+        //   };
+        // })
+        // )
         console.log(messages);
 
       } catch (err) {
@@ -118,10 +121,10 @@ export default function GroupPage() {
     }
 
     // only get message history if selectedGroup is valid
-    if (selectedGroup) {
+    if (selectedChannel) {
       getMessageHistory();
     }
-  }, [selectedGroup]);
+  }, [selectedChannel]);
 
 
   const joinGroup = (groupId) => {
@@ -138,8 +141,8 @@ export default function GroupPage() {
   const sendMessage = () => {
     const sendMsg = async () => {
       console.log("tried to send a message")
-      if (messageInput.trim() && !isLoggedOut() && selectedGroup) {
-        const request = new Request(`${apiURL}/groups/${selectedGroup.id}/send-message`, {
+      if (messageInput.trim() && !isLoggedOut() && selectedChannel) {
+        const request = new Request(`${apiURL}/messages/${selectedChannel.channel_id}/send`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -181,9 +184,9 @@ export default function GroupPage() {
     window.location.href = "/groups";
   };
 
-if(!selectedGroup){
-  return <div className='center'>Loading...</div>
-}
+  if (!selectedGroup) {
+    return <div className='center'>Loading...</div>
+  }
 
   // Group Detail View with Chat
   const groupMessages = messages;
