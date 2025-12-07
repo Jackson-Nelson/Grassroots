@@ -13,10 +13,11 @@ const EventCard = ({ event }) => {
     ? `${event.address}, ${event.city}, ${event.state} ${event.zip}`
     : `${event.address}, ${event.city}, ${event.country}`;
 
-  // format date and time
-  const eventDateTime = event.event_time
-    ? `${new Date(event.event_date).toLocaleDateString()} at ${event.event_time.substring(0, 5)}`
-    : new Date(event.event_date).toLocaleDateString();
+  // format date
+  const eventDate = new Date(event.event_date).toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric' 
+  });
 
   const handleClick = () => {
     navigate(`/events/${event.event_id}`);
@@ -38,7 +39,7 @@ const EventCard = ({ event }) => {
         </div>
       </div>
       <div className="p-2">
-        <h5 className="text-green-700 font-bold text-base mb-1">
+        <h5 className="text-green-700 font-semibold text-md mb-1">
           {event.title}
         </h5>
         <p className="text-gray-600 text-xs mb-1">{location}</p>
@@ -58,7 +59,7 @@ const GroupCard = ({ group }) => (
       className="w-full h-24 object-cover"
     />
     <div className="p-2">
-      <h5 className="text-green-700 font-bold mb-1 text-base">
+      <h5 className="text-green-700 font-semibold mb-1 text-md">
         {group.name}
       </h5>
       {group.description && (
