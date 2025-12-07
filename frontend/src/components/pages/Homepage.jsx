@@ -10,14 +10,13 @@ const EventCard = ({ event }) => {
 
   // get location from event
   const location = event.address
-    ? `${event.city}, ${event.state}`
-    : `${event.city}, ${event.country}`;
+    ? `${event.address}, ${event.city}, ${event.state} ${event.zip}`
+    : `${event.address}, ${event.city}, ${event.country}`;
 
-  // format date
-  const eventDate = new Date(event.event_date).toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric' 
-  });
+  // format date and time
+  const eventDateTime = event.event_time
+    ? `${new Date(event.event_date).toLocaleDateString()} at ${event.event_time.substring(0, 5)}`
+    : new Date(event.event_date).toLocaleDateString();
 
   const handleClick = () => {
     navigate(`/events/${event.event_id}`);
