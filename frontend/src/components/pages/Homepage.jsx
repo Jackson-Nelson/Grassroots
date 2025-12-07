@@ -35,7 +35,7 @@ const EventCard = ({ event }) => {
           className="w-full h-24 object-cover"
         />
         <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded shadow-sm">
-          <p className="text-xs font-semibold text-gray-700">{event.eventDate}</p>
+          <p className="text-xs font-semibold text-gray-700">{eventDate}</p>
         </div>
       </div>
       <div className="p-2">
@@ -60,7 +60,7 @@ const GroupCard = ({ group }) => {
   return (
     <div
       onClick={handleClick}
-      className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[30%] mb-5 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+      className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[18%] mb-5 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
     >
       <img
         src={group.avatar_url || placeholderImg}
@@ -363,7 +363,7 @@ const Homepage = () => {
       {/* footer */}
       <footer className="fixed bottom-0 right-0 px-8 py-5 text-right z-10">
         <div className="flex flex-col gap-1">
-          <a href="#" className="text-green-700 no-underline hover:underline">
+          <a href="/about-us" className="text-green-700 no-underline hover:underline">
             About Us
           </a>
         </div>

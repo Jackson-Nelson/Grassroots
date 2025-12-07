@@ -8,6 +8,7 @@ import EventPage from './components/pages/EventPage.jsx'
 import Header from './components/Header.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import GroupPage from "./components/pages/Group.jsx";
+import AboutUs from "./components/pages/AboutUs.jsx";
 
 
 // many things will need to pass this auth token when they try to get any info about a user, keep logged in, etc.
@@ -47,6 +48,7 @@ function App() {
             <Route path="/users/:userId" element={<UserProfile />} />
             <Route path="/events/:eventId" element={<EventPage />} />
             <Route path="/groups/:groupId" element={< GroupPage />} />
+            <Route path="/about-us" element={< AboutUs />} />
           </Routes>
         </div>
       </div>
