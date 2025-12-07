@@ -560,7 +560,7 @@ app.post("/api/groups/create", auth, async (req, res) => {
   }
 
 
-  let result = await pool.query("SELECT city, country FROM users WHERE user_id = $1", [creator_id]);
+  let result = await pool.query("SELECT city, state, country FROM users WHERE user_id = $1", [creator_id]);
 
   // check if result faild somehow
   if (result.rowCount === 0) {
@@ -570,20 +570,21 @@ app.post("/api/groups/create", auth, async (req, res) => {
   console.log(JSON.stringify(result));
 
   // city/country of group should equal those of the creator
-  const [city, country] = [result.rows[0].city, result.rows[0].country];
+  const [city, state, country] = [result.rows[0].city, result.rows[0].state, result.rows[0].country];
 
   console.log('city:' + city);
+  console.log('state:' + state);
   console.log('country:' + country);
 
   // check if group by that name already exists
-  result = await pool.query('SELECT * FROM groups where name = $1 and city = $2 and country = $3', [name, city, country]);
+  result = await pool.query('SELECT * FROM groups where name = $1 and city = $2 and state = $3 AND country = $4', [name, city, state, country]);
   if (result.rowCount !== 0) {
     return res.status(400).send("group already exists!");
   }
 
 
   //all checks passed, create group
-  result = await pool.query("INSERT INTO groups (name, description, city, country, creator_id, created_at) VALUES($1, $2, $3, $4, $5, NOW()) RETURNING group_id", [name, desc, city, country, creator_id])
+  result = await pool.query("INSERT INTO groups (name, description, city, state, country, creator_id, created_at) VALUES($1, $2, $3, $4, $5, $6, NOW()) RETURNING group_id", [name, desc, city, state, country, creator_id])
 
   const group_id = result.rows[0].group_id;
 
