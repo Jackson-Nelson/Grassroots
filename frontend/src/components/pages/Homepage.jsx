@@ -23,7 +23,7 @@ const EventCard = ({ event }) => {
   };
 
   return (
-    <div 
+    <div
       onClick={handleClick}
       className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[30%] mb-5 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
     >
@@ -47,26 +47,36 @@ const EventCard = ({ event }) => {
   );
 };
 
-const GroupCard = ({ group }) => (
-  <div className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[30%] mb-5 bg-white shadow-sm">
-    <img
-      src={group.avatar_url || placeholderImg}
-      alt={group.name}
-      className="w-full h-52 object-cover"
-    />
-    <div className="p-4">
-      <h5 className="text-green-700 font-semibold mb-2">
-        {group.name}
-      </h5>
-      {group.description && (
-        <p className="text-gray-600 text-sm mb-1">{group.description}</p>
-      )}
-      <p className="text-gray-500 text-xs">
-        {group.city}, {group.state}
-      </p>
+const GroupCard = ({ group }) => {
+  const navigate = useNavigate();
+  const handleClick = () => {
+    navigate(`/groups/${group.group_id}`);
+  };
+
+  return (
+    <div
+      onClick={handleClick}
+      className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[30%] mb-5 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+    >
+      <img
+        src={group.avatar_url || placeholderImg}
+        alt={group.name}
+        className="w-full h-52 object-cover"
+      />
+      <div className="p-4">
+        <h5 className="text-green-700 font-semibold mb-2">
+          {group.name}
+        </h5>
+        {group.description && (
+          <p className="text-gray-600 text-sm mb-1">{group.description}</p>
+        )}
+        <p className="text-gray-500 text-xs">
+          {group.city}, {group.state}
+        </p>
+      </div>
     </div>
-  </div>
-);
+  )
+}
 
 const Homepage = () => {
   const [events, setEvents] = useState([]);
@@ -95,6 +105,7 @@ const Homepage = () => {
             window.location.href = "/sign-in";
             throw new Error('Failed getting your location: ' + response.text());
           }
+          throw new Error('Failed getting location')
         }
 
         const user = await response.json();
@@ -105,9 +116,9 @@ const Homepage = () => {
       }
     }
 
-    if(isLoggedOut()){
+    if (isLoggedOut()) {
       getLocale(setUserLoc);
-    }else{
+    } else {
       fetchLoc();
     }
   }, [])
@@ -140,10 +151,10 @@ const Homepage = () => {
         eventsUrl.searchParams.append('state', hasUserLoc.state);
         // eventsUrl.searchParams.append('zip', userLocation.zip);
         eventsUrl.searchParams.append('country', hasUserLoc.country);
-        
+
         // Fetch user's groups with user_id
         // groupsUrl.searchParams.append('user_id', userId);
-        
+
         const eventsRes = await fetch(eventsUrl);
         if (!eventsRes.ok) {
           const errorText = await eventsRes.text();
@@ -152,22 +163,22 @@ const Homepage = () => {
         const eventsData = await eventsRes.json();
         setEvents(eventsData);
 
-        if(!isLoggedOut()){
+        if (!isLoggedOut()) {
           const groupsReq = new Request(`${apiURL}/groups/my-groups/`, {
             headers: {
               "Authorization": "Bearer " + getAuthToken().JWT
             }
           });
-          
-          
+
+
           const groupsRes = await fetch(groupsReq);
           if (!groupsRes.ok) {
-            if(groupsRes.status !== 403){
+            if (groupsRes.status !== 403) {
               const errorText = await groupsRes.text();
               throw new Error(`Failed to fetch groups: ${groupsRes.status} ${errorText}`);
             }
           }
-          
+
           const groupsData = await groupsRes.json();
           setGroups(groupsData);
         }
