@@ -376,10 +376,14 @@ const getGroupData = async (gid) => {
 
   const result = await pool.query("SELECT * FROM groups WHERE groups.group_id = $1", [gid]);
 
-    const tags = await getGroupTags(gid);
-    const members = await getGroupMembers(gid);
-
-    return result.rowCount > 0 ? {...result.rows[0], tags:tags, members:members} : null;
+  return (result.rowCount === 0)
+    ? null
+    : {
+      ...result.rows[0],
+      tags: await getGroupTags(gid),
+      members: await getGroupMembers(gid),
+      channels: await getGroupChannels(gid)
+    }
 }
 
 

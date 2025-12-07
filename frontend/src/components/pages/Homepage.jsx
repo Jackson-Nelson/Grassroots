@@ -24,7 +24,7 @@ const EventCard = ({ event }) => {
   };
 
   return (
-    <div 
+    <div
       onClick={handleClick}
       className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[18%] mb-2 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
     >
@@ -35,7 +35,7 @@ const EventCard = ({ event }) => {
           className="w-full h-24 object-cover"
         />
         <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded shadow-sm">
-          <p className="text-xs font-semibold text-gray-700">{eventDate}</p>
+          <p className="text-xs font-semibold text-gray-700">{event.eventDate}</p>
         </div>
       </div>
       <div className="p-2">
@@ -51,26 +51,36 @@ const EventCard = ({ event }) => {
   );
 };
 
-const GroupCard = ({ group }) => (
-  <div className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[18%] mb-2 bg-white shadow-sm">
-    <img
-      src={group.avatar_url || placeholderImg}
-      alt={group.name}
-      className="w-full h-24 object-cover"
-    />
-    <div className="p-2">
-      <h5 className="text-green-700 font-semibold mb-1 text-md">
-        {group.name}
-      </h5>
-      {group.description && (
-        <p className="text-gray-600 text-xs mb-1 line-clamp-2">{group.description}</p>
-      )}
-      <p className="text-gray-500 text-xs">
-        {group.city}, {group.state}
-      </p>
+const GroupCard = ({ group }) => {
+  const navigate = useNavigate();
+  const handleClick = () => {
+    navigate(`/groups/${group.group_id}`);
+  };
+
+  return (
+    <div
+      onClick={handleClick}
+      className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[30%] mb-5 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+    >
+      <img
+        src={group.avatar_url || placeholderImg}
+        alt={group.name}
+        className="w-full h-24 object-cover"
+      />
+      <div className="p-2">
+        <h5 className="text-green-700 font-bold mb-1 text-base">
+          {group.name}
+        </h5>
+        {group.description && (
+          <p className="text-gray-600 text-xs mb-1 line-clamp-2">{group.description}</p>
+        )}
+        <p className="text-gray-500 text-xs">
+          {group.city}, {group.state}
+        </p>
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
 const Homepage = () => {
   const [nearbyEvents, setNearbyEvents] = useState([]);
@@ -112,9 +122,9 @@ const Homepage = () => {
       }
     }
 
-    if(isLoggedOut()){
+    if (isLoggedOut()) {
       getLocale(setUserLoc);
-    }else{
+    } else {
       fetchLoc();
     }
   }, [])
@@ -129,7 +139,7 @@ const Homepage = () => {
         eventsUrl.searchParams.append('city', hasUserLoc.city);
         eventsUrl.searchParams.append('state', hasUserLoc.state);
         eventsUrl.searchParams.append('country', hasUserLoc.country);
-        
+
         const eventsRes = await fetch(eventsUrl);
         if (!eventsRes.ok) {
           const errorText = await eventsRes.text();
@@ -138,22 +148,22 @@ const Homepage = () => {
         const eventsData = await eventsRes.json();
         setNearbyEvents(eventsData);
 
-        if(!isLoggedOut()){
+        if (!isLoggedOut()) {
           // fetch my groups
           const myGroupsReq = new Request(`${apiURL}/groups/my-groups/`, {
             headers: {
               "Authorization": "Bearer " + getAuthToken().JWT
             }
           });
-          
+
           const myGroupsRes = await fetch(myGroupsReq);
           if (!myGroupsRes.ok) {
-            if(myGroupsRes.status !== 403){
+            if (myGroupsRes.status !== 403) {
               const errorText = await myGroupsRes.text();
               throw new Error(`Failed to fetch groups: ${myGroupsRes.status} ${errorText}`);
             }
           }
-          
+
           const myGroupsData = await myGroupsRes.json();
           setMyGroups(myGroupsData);
 
@@ -163,7 +173,7 @@ const Homepage = () => {
               "Authorization": "Bearer " + getAuthToken().JWT
             }
           });
-          
+
           const myEventsRes = await fetch(myEventsReq);
           if (myEventsRes.ok) {
             const myEventsData = await myEventsRes.json();
@@ -176,7 +186,7 @@ const Homepage = () => {
               "Authorization": "Bearer " + getAuthToken().JWT
             }
           });
-          
+
           const groupEventsRes = await fetch(groupEventsReq);
           if (groupEventsRes.ok) {
             const groupEventsData = await groupEventsRes.json();
@@ -188,7 +198,7 @@ const Homepage = () => {
           nearbyGroupsUrl.searchParams.append('city', hasUserLoc.city);
           nearbyGroupsUrl.searchParams.append('state', hasUserLoc.state);
           nearbyGroupsUrl.searchParams.append('country', hasUserLoc.country);
-          
+
           const nearbyGroupsRes = await fetch(nearbyGroupsUrl);
           if (nearbyGroupsRes.ok) {
             const nearbyGroupsData = await nearbyGroupsRes.json();
