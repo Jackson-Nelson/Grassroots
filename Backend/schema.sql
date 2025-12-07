@@ -78,6 +78,7 @@ CREATE TABLE events (
     state VARCHAR(255),
     zip INTEGER,
     country VARCHAR(255) NOT NULL,
+    image_url TEXT,
     is_cancelled BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -126,7 +127,9 @@ CREATE TABLE messages (
 
 
 
-
+-- CHANGES...
+ALTER TABLE events 
+ADD COLUMN IF NOT EXISTS image_url TEXT;
 
 
 -- EXAMPLE DATA
@@ -137,10 +140,6 @@ INSERT INTO users (user_id, username, email, password_hash, full_name, city, cou
 -- GROUPS
 INSERT INTO groups (group_id, name, description, city, county, state, zip, country, creator_id) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'Climate Action Bellingham', 'A climate activism group based in Bellingham, WA.', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States of America', 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID);
 INSERT INTO groups (group_id, name, description, city, county, state, zip, country, creator_id) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A12'::UUID, 'Test Group', 'A Test Group From Bham', 'Bellingham', 'Whatcom', 'Washington', 98225, 'United States of America', 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID);
-
-INSERT INTO channels (channel_id, group_id, name) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A10'::UUID, 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'default');
-INSERT INTO channels (channel_id, group_id, name) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A12'::UUID, 'default');
-
 
 -- GROUP MEMBERS
 INSERT INTO group_members (group_id, user_id, role) VALUES ('A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'::UUID, 'owner');

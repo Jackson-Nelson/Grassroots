@@ -10,7 +10,7 @@ const app = express()
 
 
 // Middleware
-app.use(express.json())
+app.use(express.json({ limit: '10mb' })) // Increase limit for base64 image uploads
 app.use(cors())
 
 
@@ -248,7 +248,7 @@ app.put("/api/events/:eventId", auth, async (req, res) => {
   try {
     const { eventId } = req.params;
     const userId = req.user;
-    const { title, description, event_date, event_time, address, city, state, zip, country } = req.body;
+    const { title, description, event_date, event_time, address, city, state, zip, country, image_url } = req.body;
 
     // check if event exists and user is the creator
     const eventResult = await pool.query(
@@ -313,6 +313,10 @@ app.put("/api/events/:eventId", auth, async (req, res) => {
       updates.push(`country = $${paramIndex++}`);
       values.push(country);
     }
+    if (image_url !== undefined && image_url !== null && image_url !== '') {
+      updates.push(`image_url = $${paramIndex++}`);
+      values.push(image_url);
+    }
 
     values.push(eventId);
 
@@ -329,6 +333,8 @@ app.put("/api/events/:eventId", auth, async (req, res) => {
 
   } catch (err) {
     console.error('Error updating event:', err);
+    console.error('Error message:', err.message);
+    console.error('Error code:', err.code);
     res.status(500).json({ error: 'Failed to update event', details: err.message });
   }
 });

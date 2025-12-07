@@ -49,7 +49,12 @@ const EventPage = () => {
         body: JSON.stringify(editForm)
       });
 
-      if (!response.ok) throw new Error('Failed to update event');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to update event' }));
+        const errorMessage = errorData.details || errorData.error || `Failed to update event (${response.status})`;
+        console.error('Backend error response:', errorData);
+        throw new Error(errorMessage);
+      }
       
       const updated = await response.json();
       setEvent(updated);
@@ -57,6 +62,7 @@ const EventPage = () => {
       setIsEditing(false);
     } catch (err) {
       setError(err.message);
+      console.error('Error updating event:', err);
     }
   };
 
@@ -67,6 +73,28 @@ const EventPage = () => {
 
   const handleChange = (e) => {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+
+      // validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file');
+        return;
+      }
+
+      // convert to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditForm({ ...editForm, image_url: reader.result });
+      };
+      reader.onerror = () => {
+        setError('Failed to read image file');
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   if (loading) return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
@@ -91,7 +119,11 @@ const EventPage = () => {
 
       {/* event header */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-        <img src={event.image_url || placeholderImg} alt={event.title} className="w-full h-64 object-cover" />
+        <img 
+          src={isEditing && editForm.image_url ? editForm.image_url : (event.image_url || placeholderImg)} 
+          alt={event.title} 
+          className="w-full h-64 object-cover" 
+        />
         
         <div className="p-6">
           <div className="flex justify-between items-start mb-4">
@@ -114,7 +146,7 @@ const EventPage = () => {
             
             {/* edit button */}
             {isCreator && !isEditing && (
-              <button onClick={() => setIsEditing(true)} className="px-4 py-2 bg-green-700 text-white rounded">
+              <button onClick={() => { setIsEditing(true); setError(null); }} className="px-4 py-2 bg-green-700 text-white rounded">
                 Edit Event
               </button>
             )}
@@ -150,6 +182,24 @@ const EventPage = () => {
               <span>{location}</span>
             )}
           </div>
+
+          {isEditing && (
+            <div className="mt-4">
+              <label className="block text-gray-700 font-semibold mb-2">Event Image:</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="w-full border rounded px-3 py-2 mb-2"
+              />
+              {error && (
+                <p className="text-sm text-red-600 mb-2">{error}</p>
+              )}
+              {editForm.image_url && !error && (
+                <p className="text-sm text-green-600 mb-4">✓ Image selected. Click Save to update.</p>
+              )}
+            </div>
+          )}
 
           {isEditing && (
             <div className="flex gap-3 mt-6">

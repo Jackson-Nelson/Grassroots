@@ -31,7 +31,7 @@ export default function Sidebar() {
     return () => window.removeEventListener("resize", update)
   }, [])
 
-  const isGroupsPage = pathname === "/groups" || pathname.startsWith("/groups/")
+  const isGroupsPage = pathname.startsWith("/groups/")
 
   return (
     <aside
