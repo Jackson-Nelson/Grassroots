@@ -5,7 +5,7 @@ import getLocale from '../../utils/getcoords';
 
 const placeholderImg = "https://picsum.photos/400/300";
 
-const EventCard = ({ event }) => {
+export const EventCard = ({ event }) => {
   const navigate = useNavigate();
 
   // get location from event
@@ -25,9 +25,10 @@ const EventCard = ({ event }) => {
 
   return (
     <div
-      onClick={handleClick}
-      className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[18%] mb-2 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-    >
+    onClick={handleClick}
+    className="border border-gray-200 rounded-md overflow-hidden w-full max-w-[250px] mb-2 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+    > 
+    {/* removed md:w-[18%] */}
       <div className="relative">
         <img
           src={event.image_url || placeholderImg}

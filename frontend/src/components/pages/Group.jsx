@@ -1,12 +1,12 @@
 import React, { useState, Fragment, useRef, useEffect } from 'react';
-import { Users, Plus, X, UserPlus, Send, MessageCircle } from 'lucide-react';
+import { Users, Plus, X, UserPlus, Send, MessageCircle, Calendar, Hash, CalendarDays, BarChart3, FolderOpen, PlusSquare } from 'lucide-react';
 import { apiURL, getAuthToken, isLoggedOut } from '../../App';
 import { useParams } from 'react-router-dom';
+import { useContext } from 'react';
+import { SideBarItemsContext } from '../Sidebar';
+import { EventCard } from './Homepage';
 
 
-
-// Mock getAuthToken function for demo
-// const getAuthToken = () => ({ JWT: 'demo-token', uid: 'user-123' });
 
 
 export default function GroupPage() {
@@ -19,17 +19,73 @@ export default function GroupPage() {
   const [currentUser, setCurrentUser] = useState(getAuthToken().user);
   const [iAmMember, setIAmMember] = useState(false);
   const messagesEndRef = useRef(null);
+  const [showingPane, setShowingPane] = useState('');
 
   const groupId = useParams().groupId;
+
+  const { addSidebarCluster, removeSidebarCluster } = useContext(SideBarItemsContext);
+
+  const EventsPane = () => {
+    return (
+      <div className='absolute bg-white rounded shadow max-h-full mt-8 pt-[10px]'>
+        
+      <div className='  max-h-full  flex flex-col align-center overflow-y-scroll  p-3 no-scrollbar '>
+
+        {!isLoggedOut() &&
+          <div className="flex flex-col gap-2 m-[10px] mb-[calc(3+10px)]">
+            {/* <input
+                        type="text"
+                        value={memberName}
+                        onChange={(e) => setMemberName(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && joinGroup(selectedGroup.id)}
+                        placeholder="Enter your name..."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      /> */}
+            <button
+              onClick={() => { window.location.href = `/events/new?groupId=${selectedGroup.id}` }}
+              className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
+              >
+              <Plus className="w-4 h-4" />
+              Create Event
+            </button>
+          </div>
+        }
+        {selectedGroup.events.length === 0 ? "No upcoming events."
+          : selectedGroup.events.map((event) => {
+            return (<div>
+              <EventCard event={event} />
+            </div>
+            )
+          })}
+      </div>
+            </div>
+    )
+  }
 
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+
+  // triggers after group loads
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, selectedGroup]);
+    if (!selectedGroup) return;
+    console.log("added new sidebat")
+
+    const GROUPS_PAGE_ITEMS = [
+      { icon: Hash, label: "Channels", path: "/groups/channels" },
+      { icon: CalendarDays, label: "Group Events", onClick: () => { setShowingPane('events'); console.log(showingPane) } },
+      { icon: BarChart3, label: "Polls", path: "/groups/polls" },
+      { icon: FolderOpen, label: "Resources", path: "/groups/resources" },
+    ]
+
+    addSidebarCluster({ groupLabel: selectedGroup.name, menuItems: GROUPS_PAGE_ITEMS })
+    console.log("RAN CONTENT")
+    // return () =>{ removeSidebarCluster(selectedGroup.name);console.log("RAN CLEANUP");}
+  
+  }, [selectedGroup]);
+
 
   // get group info when you go to group's page
   useEffect(() => {
@@ -144,7 +200,7 @@ export default function GroupPage() {
         }
 
         setIAmMember(true);
-        setSelectedGroup({...selectedGroup, members:[...selectedGroup.members, getAuthToken().user]})
+        setSelectedGroup({ ...selectedGroup, members: [...selectedGroup.members, getAuthToken().user] })
 
 
       } catch (err) {
@@ -171,7 +227,7 @@ export default function GroupPage() {
         }
 
         setIAmMember(false);
-        setSelectedGroup({...selectedGroup, members:selectedGroup.members.filter(memb => memb.user_id != getAuthToken().user.uid)})
+        setSelectedGroup({ ...selectedGroup, members: selectedGroup.members.filter(memb => memb.user_id != getAuthToken().user.uid) })
 
 
       } catch (err) {
@@ -237,7 +293,11 @@ export default function GroupPage() {
   const isMember = iAmMember;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-100 p-8">
+    <div className="min-h-[100vh] bg-gradient-to-br from-blue-50 to-green-100 px-8" onClick={()=>setShowingPane('')}>
+
+      {showingPane === 'events' && <EventsPane />}
+      {console.log("showing pane: " + showingPane)}
+
       <div className="max-w-6xl mx-auto">
         <button
           onClick={goBack}
@@ -316,9 +376,9 @@ export default function GroupPage() {
                     </div>
                   </div>
                 )
-              :
-                                  <div className="flex flex-col gap-2">
-                      {/* <input
+                  :
+                  <div className="flex flex-col gap-2">
+                    {/* <input
                         type="text"
                         value={memberName}
                         onChange={(e) => setMemberName(e.target.value)}
@@ -326,15 +386,15 @@ export default function GroupPage() {
                         placeholder="Enter your name..."
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                       /> */}
-                      <button
-                        onClick={() => leaveGroup(selectedGroup.id)}
-                        className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2"
-                      >
-                        <UserPlus className="w-4 h-4" />
-                        Leave Group
-                      </button>
-                    </div>
-}
+                    <button
+                      onClick={() => leaveGroup(selectedGroup.id)}
+                      className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Leave Group
+                    </button>
+                  </div>
+              }
             </div>
           </div>
 

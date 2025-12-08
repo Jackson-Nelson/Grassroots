@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { apiURL, getAuthToken, isLoggedOut } from '../../App';
 
 const placeholderImg = "https://picsum.photos/800/400";
@@ -14,7 +14,17 @@ const EventPage = () => {
   const [isCreator, setIsCreator] = useState(false);
   const [editForm, setEditForm] = useState({});
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   useEffect(() => {
+
+    if(eventId === 'new'){
+      setEvent({event_id:'new', group_id:searchParams.get('groupId')})
+      setLoading(false);
+      setIsEditing(true);
+      return;
+    }
+
     const fetchEvent = async () => {
       try {
         const response = await fetch(`${apiURL}/events/${eventId}`);
@@ -46,7 +56,7 @@ const EventPage = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${getAuthToken().JWT}`
         },
-        body: JSON.stringify(editForm)
+        body: JSON.stringify({...editForm, group_id:event.group_id})
       });
 
       if (!response.ok) {
@@ -67,6 +77,10 @@ const EventPage = () => {
   };
 
   const handleCancel = () => {
+    if(eventId === 'new'){
+      window.history.go(-1);
+      return;
+    }
     setEditForm(event);
     setIsEditing(false);
   };

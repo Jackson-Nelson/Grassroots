@@ -36,21 +36,23 @@ function App() {
         <Header />
 
         {/* sidebar */}
-        <Sidebar />
+        <Sidebar>
 
-        {/* main content */}
-        <div className="flex-1 pl-24 pt-[65px]">
-          <Routes>
-            <Route exact path="/" element={<Homepage />} />
-            <Route path="/home" element={<Homepage />} />
-            <Route path="/sign-in" element={<Auth />} />
-            <Route path="/groups" element={<Groups />} />
-            <Route path="/users/:userId" element={<UserProfile />} />
-            <Route path="/events/:eventId" element={<EventPage />} />
-            <Route path="/groups/:groupId" element={< GroupPage />} />
-            <Route path="/about-us" element={< AboutUs />} />
-          </Routes>
-        </div>
+
+          {/* main content */}
+          <div className="flex-1 pl-16 pt-[65px]">
+            <Routes>
+              <Route exact path="/" element={<Homepage />} />
+              <Route path="/home" element={<Homepage />} />
+              <Route path="/sign-in" element={<Auth />} />
+              <Route path="/groups" element={<Groups />} />
+              <Route path="/users/:userId" element={<UserProfile />} />
+              <Route path="/events/:eventId" element={<EventPage />} />
+              <Route path="/groups/:groupId" element={< GroupPage />} />
+              <Route path="/about-us" element={< AboutUs />} />
+            </Routes>
+          </div>
+        </Sidebar>
       </div>
     </Router>
 

@@ -246,15 +246,25 @@ app.get("/api/events/:eventId", async (req, res) => {
 // EVENT PAGES: update an event (requires auth, only creator can update)
 app.put("/api/events/:eventId", auth, async (req, res) => {
   try {
-    const { eventId } = req.params;
+    let { eventId } = req.params;
     const userId = req.user;
-    const { title, description, event_date, event_time, address, city, state, zip, country, image_url } = req.body;
+    const { title, description, event_date, event_time, address, city, state, zip, country, image_url, group_id } = req.body;
 
-    // check if event exists and user is the creator
-    const eventResult = await pool.query(
-      'SELECT creator_id FROM events WHERE event_id = $1',
-      [eventId]
-    );
+    if (eventId !== 'new') {
+      // check if event exists and user is the creator
+      const eventResult = await pool.query(
+        'SELECT creator_id FROM events WHERE event_id = $1',
+        [eventId]
+      );
+
+      if (eventResult.rowCount === 0) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+
+      if (eventResult.rows[0].creator_id !== userId) {
+        return res.status(403).json({ error: 'Only the event creator can update this event' });
+      }
+    }
 
     // correct country input for the united states of america
     if (country !== undefined) {
@@ -262,14 +272,6 @@ app.put("/api/events/:eventId", auth, async (req, res) => {
       if (normalizedCountry === "United States" || normalizedCountry === "US") {
         country = "United States of America";
       }
-    }
-
-    if (eventResult.rowCount === 0) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
-    if (eventResult.rows[0].creator_id !== userId) {
-      return res.status(403).json({ error: 'Only the event creator can update this event' });
     }
 
     // updating an event:
@@ -318,16 +320,32 @@ app.put("/api/events/:eventId", auth, async (req, res) => {
       values.push(image_url);
     }
 
-    values.push(eventId);
+    // values.push(eventId);
+
+
+    // create a new event
+    if (eventId === 'new') {
+
+      if (!group_id || !userId || !title || !event_date || !address || !city || !country) {
+        return res.status(400).json({ error: 'A new event must specify all of: title, event_date, address, city, country' });
+      }
+
+      const query = `INSERT INTO events (group_id,creator_id,title,event_date,address,city,country) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING event_id`
+      eventId = (await pool.query(query,
+        [group_id, userId, title, event_date, address, city, country]
+      )).rows[0].event_id;
+    }
+
 
     const updateQuery = `
       UPDATE events 
       SET ${updates.join(', ')}
       WHERE event_id = $${paramIndex}
       RETURNING *
-    `;
+      `;
 
-    const result = await pool.query(updateQuery, values);
+    const result = await pool.query(updateQuery, [...values, eventId]);
+
 
     res.json(result.rows[0]);
 
@@ -372,6 +390,16 @@ const getGroupChannels = async (gid) => {
   return channels.rows;//.map((channel) => channels.channe)
 }
 
+const getGroupEvents = async (gid) => {
+
+  // get group tags
+  const events = await pool.query(
+    'SELECT events.* FROM events JOIN groups using(group_id) WHERE group_id = $1',
+    [gid]
+  )
+  return events.rows;//.map((channel) => channels.channe)
+}
+
 const getGroupData = async (gid) => {
 
   const result = await pool.query("SELECT * FROM groups WHERE groups.group_id = $1", [gid]);
@@ -382,7 +410,8 @@ const getGroupData = async (gid) => {
       ...result.rows[0],
       tags: await getGroupTags(gid),
       members: await getGroupMembers(gid),
-      channels: await getGroupChannels(gid)
+      channels: await getGroupChannels(gid),
+      events: await getGroupEvents(gid),
     }
 }
 
@@ -416,23 +445,23 @@ app.get("/api/group/:groupId", async (req, res) => { // successful response is a
 )
 
 app.post("/api/groups/:groupId/join", auth, async (req, res) => {
-  
+
   const groupId = req.params.groupId;
   const userId = req.user;
 
-  try{
+  try {
 
     const groups = await pool.query("SELECT * FROM groups WHERE groups.group_id = $1", [groupId]);
 
     // group does not exist
-    if(groups.rowCount === 0){
+    if (groups.rowCount === 0) {
       return res.sendStatus(400);
     }
 
     const membership = await pool.query("SELECT * FROM users JOIN group_members using(user_id) JOIN groups using(group_id) WHERE user_id = $1 AND group_id = $2", [userId, groupId]);
 
     // check if already a member
-    if(membership.rowCount !== 0){
+    if (membership.rowCount !== 0) {
       return res.sendStatus(400);
     }
 
@@ -440,30 +469,30 @@ app.post("/api/groups/:groupId/join", auth, async (req, res) => {
 
     res.sendStatus(204);
 
-  }catch(err){
-    console.error("Error while joining group:"+ err);
+  } catch (err) {
+    console.error("Error while joining group:" + err);
     res.sendStatus(500);
   }
 
 })
 app.post("/api/groups/:groupId/leave", auth, async (req, res) => {
-  
+
   const groupId = req.params.groupId;
   const userId = req.user;
 
-  try{
+  try {
 
     const groups = await pool.query("SELECT * FROM groups WHERE groups.group_id = $1", [groupId]);
 
     // group does not exist
-    if(groups.rowCount === 0){
+    if (groups.rowCount === 0) {
       return res.sendStatus(400);
     }
 
     const membership = await pool.query("SELECT * FROM users JOIN group_members using(user_id) JOIN groups using(group_id) WHERE user_id = $1 AND group_id = $2", [userId, groupId]);
 
     // check if already a member
-    if(membership.rowCount === 0){
+    if (membership.rowCount === 0) {
       return res.sendStatus(400);
     }
 
@@ -471,7 +500,7 @@ app.post("/api/groups/:groupId/leave", auth, async (req, res) => {
 
     res.sendStatus(200);
 
-  }catch(err){
+  } catch (err) {
     console.error(err);
     res.sendStatus(500);
   }
