@@ -330,34 +330,6 @@ const Homepage = () => {
           </section>
         )}
 
-
-        {/* MY GROUPS SECTION */}
-        {!isLoggedOut() && (
-          <section className="mb-6">
-            <h2 className="text-xl font-semibold text-green-700 mb-3">
-              My Groups →
-            </h2>
-
-            {loading && <p className="text-gray-700">Loading groups...</p>}
-            {error && (
-              <p className="text-red-600">
-                Error: {error}
-              </p>
-            )}
-
-            <div className="flex flex-wrap gap-5">
-              {!loading && !error && myGroups.length === 0 && (
-                <p className="text-gray-600">
-                  You haven't joined any groups yet.
-                </p>
-              )}
-              {myGroups.map((group) => (
-                <GroupCard key={group.group_id} group={group} />
-              ))}
-            </div>
-          </section>
-        )}
-
       </main>
 
       {/* footer */}
