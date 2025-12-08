@@ -31,7 +31,7 @@ export const apiURL = 'http://localhost:4000/api';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-gray-50">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-green-100">
         {/* header */}
         <Header />
 
