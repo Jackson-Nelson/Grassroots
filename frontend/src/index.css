@@ -27,7 +27,7 @@
 }
 
 .Form>* {
-  background: linear-gradient(to right, green, rgb(115, 255, 0));
+  background: bg-gray-50;
   margin: 15px;
   padding: 10px;
   border-style: solid;
@@ -37,7 +37,7 @@
 }
 
 body {
-  background-color: #afa29256;
+  background-color: bg-gray-50;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
