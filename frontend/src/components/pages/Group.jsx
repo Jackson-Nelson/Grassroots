@@ -121,7 +121,8 @@ export default function GroupPage() {
   // triggers after group loads
   useEffect(() => {
     if (!selectedGroup) return;
-    console.log("added new sidebat")
+
+
 
     const GROUPS_PAGE_ITEMS = [
       { icon: Hash, label: "Channels", onClick: (() => setSidebarPressed('channels')) },
@@ -147,6 +148,8 @@ export default function GroupPage() {
         const response = await fetch(request)
 
         if (!response.ok) {
+          document.title = 'Failed to load group -- Grassroots'
+
           switch (response.status) {
             case 404:
               throw new Error(`Group by ID ${groupId} does not exist.`);
@@ -156,11 +159,13 @@ export default function GroupPage() {
               throw new Error(await response.text());
           }
         }
-
+        
         const groupInfo = await response.json();
         console.log("group data:");
         console.log(groupInfo)
 
+        document.title = groupInfo.name + ' -- Grassroots'
+        
         setSelectedGroup({
           ...groupInfo,
           id: groupInfo.group_id
@@ -455,7 +460,7 @@ export default function GroupPage() {
               <div className="p-4 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
                   <MessageCircle className="w-5 h-5 text-green-600" />
-                  Group Chat
+                  Group Chat {selectedChannel.name !== 'default' && `: ${selectedChannel.name}`}
                 </h2>
               </div>
 

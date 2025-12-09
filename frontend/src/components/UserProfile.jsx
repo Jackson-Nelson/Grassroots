@@ -12,11 +12,14 @@ const UserProfile = () => {
 
     const getUserInfo = async () => {
 
+
         try {
 
             const response = await fetch(`${apiURL}/users/${user_id}`);
 
             if (!response.ok) {
+                document.title = 'Failed to Load Profile -- Grassroots'
+
                 // maybe profile is private, unavailable, you are blocked, etc
                 throw new Error("Failed to load profile");
             }
@@ -26,6 +29,8 @@ const UserProfile = () => {
             console.log("Recieved: " + (userData));
             setData(userData);
             setLoadState('loaded');
+
+            document.title = userData.username + '\'s Profile -- Grassroots'
 
         } catch (err) {
             console.error(err);

@@ -95,6 +95,8 @@ const Homepage = () => {
   const [hasUserLoc, setUserLoc] = useState(false);
 
   useEffect(() => {
+    document.title = 'Home -- Grassroots'
+
     const fetchLoc = async () => {
 
       console.log("loggedout: " + isLoggedOut())

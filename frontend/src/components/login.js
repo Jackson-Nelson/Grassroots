@@ -147,6 +147,9 @@ export const Auth = () => {
 
 
     useEffect(() => {
+
+        document.title = 'Sign In -- Grassroots'
+
         if (!isLoggedOut())
             checkAlreadyLoggedIn();
         // console.log("EFFECT USED");

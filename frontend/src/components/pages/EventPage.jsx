@@ -19,6 +19,8 @@ const EventPage = () => {
   useEffect(() => {
 
     if(eventId === 'new'){
+        document.title = 'New Event -- Grassroots'
+
       setEvent({event_id:'new', group_id:searchParams.get('groupId')})
       setLoading(false);
       setIsEditing(true);
@@ -34,11 +36,15 @@ const EventPage = () => {
         setEvent(data);
         setEditForm(data);
 
+        document.title = data.title + ' -- Grassroots'
+
         // check if user is creator
         if (!isLoggedOut()) {
           setIsCreator(data.creator_id === getAuthToken().user.uid);
         }
       } catch (err) {
+        document.title = 'Failed to Load Event -- Grassroots'
+
         setError(err.message);
       } finally {
         setLoading(false);

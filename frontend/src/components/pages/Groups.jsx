@@ -29,6 +29,9 @@ export default function Groups() {
 
   // load all groups I am a member of
   useEffect(() => {
+
+    document.title = 'My Groups -- Grassroots'
+
     const fetchGroups = async () => {
       const request = new Request(`${apiURL}/groups/my-groups/`, {
         headers: {
@@ -56,8 +59,8 @@ export default function Groups() {
       }
     }
 
-    if(!isLoggedOut())
-    fetchGroups();
+    if (!isLoggedOut())
+      fetchGroups();
   }, []);
 
   // load messages when I open a group
@@ -98,8 +101,8 @@ export default function Groups() {
             timestamp: msg.created_at,
           };
         })
-      )
-      console.log(messages);
+        )
+        console.log(messages);
 
       } catch (err) {
         console.error(err);
@@ -140,7 +143,7 @@ export default function Groups() {
       };
 
       setGroups([...groups, newGroupData]);
-      setMessages([ ...messages]);
+      setMessages([...messages]);
       setNewGroup({ name: '', description: '', tags: [] });
       setTagInput('');
       setShowCreateModal(false);
@@ -156,7 +159,7 @@ export default function Groups() {
       };
 
       setGroups([...groups, newGroupData]);
-      setMessages([ ...messages ]);
+      setMessages([...messages]);
       setNewGroup({ name: '', description: '', tags: [] });
       setTagInput('');
       setShowCreateModal(false);
@@ -269,7 +272,7 @@ export default function Groups() {
                 <div
                   key={group.id}
                   // onClick={() => setSelectedGroup(group)}
-                  onClick={()=>window.location.href= `/groups/${group.id}`}
+                  onClick={() => window.location.href = `/groups/${group.id}`}
                   className="bg-white rounded-lg p-6 cursor-pointer shadow-md hover:shadow-xl transition-shadow"
                 >
                   <div className="flex items-start gap-3 mb-3">
