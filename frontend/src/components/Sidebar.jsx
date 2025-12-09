@@ -5,8 +5,8 @@ import { useLocation, useNavigate } from "react-router-dom"
 
 
 const MENU_ITEMS = [
-  { icon: Users, label: "Groups", path: "/groups" },
-  { icon: Calendar, label: "Events", path: "/events" },
+  { icon: Users, label: "My Groups", path: "/groups" },
+  { icon: Calendar, label: "My Events", path: "/events" },
 ]
 
 
