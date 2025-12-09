@@ -199,7 +199,7 @@ const EventPage = () => {
                 <input type="text" name="country" value={editForm.country || ''} onChange={handleChange} placeholder="Country" className="w-full border rounded px-3 py-1" />
               </div>
             ) : (
-              <span>{location}</span>
+              <a href={`https://maps.google.com/maps?q=${location}`} className='hover:underline'>{location}</a>
             )}
           </div>
 

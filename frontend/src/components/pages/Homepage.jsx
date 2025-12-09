@@ -155,6 +155,19 @@ const Homepage = () => {
         const eventsData = await eventsRes.json();
         setNearbyEvents(eventsData);
 
+        
+          // fetch nearby groups
+          const nearbyGroupsUrl = new URL(`${apiURL}/groups/nearby`);
+          nearbyGroupsUrl.searchParams.append('city', hasUserLoc.city);
+          nearbyGroupsUrl.searchParams.append('state', hasUserLoc.state);
+          nearbyGroupsUrl.searchParams.append('country', hasUserLoc.country);
+
+          const nearbyGroupsRes = await fetch(nearbyGroupsUrl);
+          if (nearbyGroupsRes.ok) {
+            const nearbyGroupsData = await nearbyGroupsRes.json();
+            setNearbyGroups(nearbyGroupsData);
+          }
+
         if (!isLoggedOut()) {
           // fetch my groups
           const myGroupsReq = new Request(`${apiURL}/groups/my-groups/`, {
@@ -200,17 +213,6 @@ const Homepage = () => {
             setGroupEvents(groupEventsData);
           }
 
-          // fetch nearby groups
-          const nearbyGroupsUrl = new URL(`${apiURL}/groups/nearby`);
-          nearbyGroupsUrl.searchParams.append('city', hasUserLoc.city);
-          nearbyGroupsUrl.searchParams.append('state', hasUserLoc.state);
-          nearbyGroupsUrl.searchParams.append('country', hasUserLoc.country);
-
-          const nearbyGroupsRes = await fetch(nearbyGroupsUrl);
-          if (nearbyGroupsRes.ok) {
-            const nearbyGroupsData = await nearbyGroupsRes.json();
-            setNearbyGroups(nearbyGroupsData);
-          }
         }
 
       } catch (err) {
@@ -257,7 +259,7 @@ const Homepage = () => {
         </section>
 
         {/* GROUPS NEAR ME SECTION */}
-        {!isLoggedOut() && (
+         
           <section className="mb-6">
             <h2 className="text-xl font-semibold text-green-700 mb-5">
               Groups Near Me →
@@ -281,7 +283,7 @@ const Homepage = () => {
               ))}
             </div>
           </section>
-        )}
+        
 
         {/* MY EVENTS SECTION */}
         {!isLoggedOut() && (
