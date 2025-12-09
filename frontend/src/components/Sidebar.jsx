@@ -85,7 +85,7 @@ export default function Sidebar({ children }) {
                   key={itemsGroup.groupLabel + item.label}
                   icon={<item.icon size={20} />}
                   label={item.label}
-                  onClick={item.onClick || (() => navigate(item.label))}
+                  onClick={item.onClick || (() => navigate(item.path))}
                   />
                 )}
                   
