@@ -348,7 +348,7 @@ export default function GroupPage() {
   const isMember = iAmMember;
 
   return (
-    <div className="min-h-[100vh] bg-gradient-to-br from-blue-50 to-green-100 px-8" onClick={() => setShowingPane('')}>
+    <div className="min-h-[100vh] bg-gray-50 px-8" onClick={() => setShowingPane('')}>
 
       {showingPane === 'events' && <EventsPane />}
       {showingPane === 'channels' && <ChannelsPane />}

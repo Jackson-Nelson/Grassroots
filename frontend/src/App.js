@@ -33,16 +33,14 @@ export const apiURL = 'http://localhost:4000/api';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-green-100">
+      <div className="min-h-screen flex flex-col bg-gray-50">
         {/* header */}
         <Header />
 
         {/* sidebar */}
         <Sidebar>
-
-
           {/* main content */}
-          <div className="flex-1 pl-16 pt-[65px]">
+          <div className="flex-1 pl-24 pt-[65px]">
             <Routes>
               <Route exact path="/" element={<Homepage />} />
               <Route path="/home" element={<Homepage />} />
@@ -52,7 +50,7 @@ function App() {
               <Route path="/events/:eventId" element={<EventPage />} />
               <Route path="/groups/:groupId" element={< GroupPage />} />
               <Route path="/about-us" element={< AboutUs />} />
-            <Route path="/events" element={<Events />} />
+              <Route path="/events" element={<Events />} />
             </Routes>
           </div>
         </Sidebar>

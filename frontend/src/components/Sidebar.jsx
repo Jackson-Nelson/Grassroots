@@ -50,7 +50,14 @@ export default function Sidebar({ children }) {
     return () => window.removeEventListener("resize", update)
   }, [])
 
-  const isGroupsPage = pathname.startsWith("/groups/")
+  // remove extended sidebar items when leaving a group page
+  useEffect(() => {
+    const isGroupsPage = pathname.startsWith("/groups/")
+    if (!isGroupsPage) {
+      setSideBarItems(prev => prev.filter(item => item.groupLabel === '_'))
+    }
+  }, [pathname])
+
   // console.log(sideBarItems)
   return (
     <div>
@@ -98,9 +105,9 @@ export default function Sidebar({ children }) {
         </nav>
       </aside >
 
-      <SideBarItemsContext value={{addSidebarCluster, removeSidebarCluster}}>
+      <SideBarItemsContext.Provider value={{addSidebarCluster, removeSidebarCluster}}>
         {children}
-      </SideBarItemsContext>
+      </SideBarItemsContext.Provider>
     </div >
   )
 }

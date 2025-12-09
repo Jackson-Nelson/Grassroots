@@ -245,7 +245,7 @@ export default function Groups() {
   // Homepage View
   if (!selectedGroup) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-100 p-8">
+      <div className="min-h-screen bg-gray-50 p-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold text-green-900 mb-3">Grassroots</h1>
@@ -411,7 +411,7 @@ export default function Groups() {
   const isMember = selectedGroup.members.includes(currentUser);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-100 p-8">
+    <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
         <button
           onClick={goBack}

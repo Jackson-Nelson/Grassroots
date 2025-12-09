@@ -283,61 +283,6 @@ const Homepage = () => {
               ))}
             </div>
           </section>
-        
-
-        {/* MY EVENTS SECTION */}
-        {!isLoggedOut() && (
-          <section className="mb-6">
-            <h2 className="text-xl font-semibold text-green-700 mb-3">
-              My Events →
-            </h2>
-
-            {loading && <p className="text-gray-700">Loading events...</p>}
-            {error && (
-              <p className="text-red-600">
-                Error: {error}
-              </p>
-            )}
-
-            <div className="flex flex-wrap gap-5">
-              {!loading && !error && myEvents.length === 0 && (
-                <p className="text-gray-600">
-                  You haven't RSVP'd to any events yet.
-                </p>
-              )}
-              {myEvents.map((event) => (
-                <EventCard key={event.event_id} event={event} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* MY GROUP EVENTS SECTION */}
-        {!isLoggedOut() && (
-          <section className="mb-6">
-            <h2 className="text-xl font-semibold text-green-700 mb-3">
-              My Group Events →
-            </h2>
-
-            {loading && <p className="text-gray-700">Loading events...</p>}
-            {error && (
-              <p className="text-red-600">
-                Error: {error}
-              </p>
-            )}
-
-            <div className="flex flex-wrap gap-5">
-              {!loading && !error && groupEvents.length === 0 && (
-                <p className="text-gray-600">
-                  No upcoming events from your groups.
-                </p>
-              )}
-              {groupEvents.map((event) => (
-                <EventCard key={event.event_id} event={event} />
-              ))}
-            </div>
-          </section>
-        )}
 
       </main>
 
