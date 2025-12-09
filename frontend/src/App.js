@@ -18,11 +18,12 @@ export const getAuthToken = () => {
   const user = localStorage.getItem("user");
 
   // user has properties uid, username, and email
-  return { JWT: tok, user: JSON.parse(user) };
+  return { JWT: tok, user: JSON.parse(user) || {uid:'',username:'', email:''} };
 }
 
 export const isLoggedOut = () => {
-  return localStorage.getItem('user') === `${null}`;
+  const res = localStorage.getItem('user');
+  return res === `${null}` || res === null;
 }
 
 export const apiURL = 'http://localhost:4000/api';

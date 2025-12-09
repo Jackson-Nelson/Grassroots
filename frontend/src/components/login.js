@@ -4,7 +4,7 @@ import passInput from "./assets/pass-input.png";
 import userInput from "./assets/user-input.png";
 import { useEffect } from "react";
 import getLocale from '../utils/getcoords.js'
-import { apiURL, getAuthToken } from "../App.js";
+import { apiURL, getAuthToken, isLoggedOut } from "../App.js";
 
 
 // this is the only place auth token should be set, so it is not exported
@@ -147,7 +147,8 @@ export const Auth = () => {
 
 
     useEffect(() => {
-        checkAlreadyLoggedIn();
+        if (!isLoggedOut())
+            checkAlreadyLoggedIn();
         // console.log("EFFECT USED");
     }, []);
 

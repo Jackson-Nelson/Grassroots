@@ -96,6 +96,9 @@ const Homepage = () => {
 
   useEffect(() => {
     const fetchLoc = async () => {
+
+      console.log("loggedout: " + isLoggedOut())
+
       const request = new Request(`${apiURL}/me`, {
         method: "GET",
         headers: {
@@ -113,6 +116,7 @@ const Homepage = () => {
             window.location.href = "/sign-in";
             throw new Error('Failed getting your location: ' + response.text());
           }
+          throw new Error('Failed getting location')
         }
 
         const user = await response.json();

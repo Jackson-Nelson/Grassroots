@@ -1,6 +1,6 @@
 import React, { useState, Fragment, useRef, useEffect } from 'react';
 import { Users, Plus, X, UserPlus, Send, MessageCircle } from 'lucide-react';
-import { apiURL, getAuthToken } from '../../App';
+import { apiURL, getAuthToken, isLoggedOut } from '../../App';
 
 // Mock getAuthToken function for demo
 // const getAuthToken = () => ({ JWT: 'demo-token', uid: 'user-123' });
@@ -56,6 +56,7 @@ export default function Groups() {
       }
     }
 
+    if(!isLoggedOut())
     fetchGroups();
   }, []);
 

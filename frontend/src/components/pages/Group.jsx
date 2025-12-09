@@ -16,10 +16,11 @@ export default function GroupPage() {
   const [memberName, setMemberName] = useState('');
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
-  const [currentUser, setCurrentUser] = useState(getAuthToken().user);
+  const [currentUser, setCurrentUser] = useState(getAuthToken().user || {uid:'',username:'', email:''});
   const [iAmMember, setIAmMember] = useState(false);
   const messagesEndRef = useRef(null);
   const [showingPane, setShowingPane] = useState('');
+  const [sidebarButtonPressed, setSidebarPressed] = useState('');
 
   const groupId = useParams().groupId;
 
@@ -27,38 +28,75 @@ export default function GroupPage() {
 
   const EventsPane = () => {
     return (
-      <div className='absolute bg-white rounded shadow max-h-full mt-8 pt-[10px]'>
-        
-      <div className='  max-h-full  flex flex-col align-center overflow-y-scroll  p-3 no-scrollbar '>
+      // <div className='absolute bg-white rounded overflow-clip shadow max-h-[70%] mt-8 pt-[10px]'>
+      <div className='absolute bg-white rounded shadow mt-8 h-[85%]  flex flex-col align-center overflow-y-scroll  p-3 no-scrollbar '>
 
-        {!isLoggedOut() &&
-          <div className="flex flex-col gap-2 m-[10px] mb-[calc(3+10px)]">
-            {/* <input
+          {!isLoggedOut() &&
+            <div className="flex flex-col gap-2 m-[10px] mb-[calc(3+10px)]">
+              {/* <input
                         type="text"
                         value={memberName}
                         onChange={(e) => setMemberName(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && joinGroup(selectedGroup.id)}
                         placeholder="Enter your name..."
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                      /> */}
-            <button
-              onClick={() => { window.location.href = `/events/new?groupId=${selectedGroup.id}` }}
-              className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
-              >
-              <Plus className="w-4 h-4" />
-              Create Event
-            </button>
-          </div>
-        }
-        {selectedGroup.events.length === 0 ? "No upcoming events."
-          : selectedGroup.events.map((event) => {
-            return (<div>
-              <EventCard event={event} />
+                        /> */}
+              <button
+                onClick={() => { window.location.href = `/events/new?groupId=${selectedGroup.id}` }}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
+                >
+                <Plus className="w-4 h-4" />
+                Create Event
+              </button>
             </div>
-            )
-          })}
-      </div>
+          }
+          {"Upcoming events:"}
+          {selectedGroup.events.length === 0 ? "No upcoming events."
+            : selectedGroup.events.map((event) => {
+              return (<div>
+                <EventCard event={event} />
+              </div>
+              )
+            })}
+        </div>
+      // </div>
+    )
+  }
+  const ChannelsPane = () => {
+    return (
+      // <div className=''>
+      <div className=' absolute bg-white rounded shadow h-[85%] mt-8 pt-[10px] max-h-full  flex flex-col align-center overflow-y-scroll  p-3 no-scrollbar '>
+
+          {!isLoggedOut() &&
+            <div className="flex flex-col gap-2 ">
+              {/* <input
+                        type="text"
+                        value={memberName}
+                        onChange={(e) => setMemberName(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && joinGroup(selectedGroup.id)}
+                        placeholder="Enter your name..."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        /> */}
+              <button
+                onClick={() => { }}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
+                >
+                <Plus className="w-4 h-4" />
+                Create Channel
+              </button>
             </div>
+          }
+          Channels:
+          {selectedGroup.channels.length === 0 ? "No channels? 🤨"
+            : selectedGroup.channels.map((channel) => {
+              return (<div className='flex flex-row items-center mt-[10px] shadow rounded from-blue-50 to-green-100 hover:bg-green-50 cursor-pointer' onClick={() => setSelectedChannel(channel)}>
+                <Hash className='mx-1 w-4 h-4'/>
+                <div>{channel.name}</div>
+              </div>
+              )
+            })}
+        </div>
+      // </div>
     )
   }
 
@@ -68,22 +106,34 @@ export default function GroupPage() {
   };
 
 
+  useEffect(() => {
+    if(!sidebarButtonPressed) return;
+
+    if (showingPane === sidebarButtonPressed) {
+      setShowingPane('');
+    } else {
+      setShowingPane(sidebarButtonPressed);
+    }
+
+    setSidebarPressed(false);
+  }, [sidebarButtonPressed])
+
   // triggers after group loads
   useEffect(() => {
     if (!selectedGroup) return;
     console.log("added new sidebat")
 
     const GROUPS_PAGE_ITEMS = [
-      { icon: Hash, label: "Channels", path: "/groups/channels" },
-      { icon: CalendarDays, label: "Group Events", onClick: () => { setShowingPane('events'); console.log(showingPane) } },
-      { icon: BarChart3, label: "Polls", path: "/groups/polls" },
-      { icon: FolderOpen, label: "Resources", path: "/groups/resources" },
+      { icon: Hash, label: "Channels", onClick: (() => setSidebarPressed('channels')) },
+      { icon: CalendarDays, label: "Group Events", onClick: (() => setSidebarPressed('events')) },
+      { icon: BarChart3, label: "Polls", onClick: (() => setSidebarPressed('polls')) },
+      { icon: FolderOpen, label: "Resources", path: "/resources" },
     ]
 
     addSidebarCluster({ groupLabel: selectedGroup.name, menuItems: GROUPS_PAGE_ITEMS })
     console.log("RAN CONTENT")
     // return () =>{ removeSidebarCluster(selectedGroup.name);console.log("RAN CLEANUP");}
-  
+
   }, [selectedGroup]);
 
 
@@ -293,10 +343,10 @@ export default function GroupPage() {
   const isMember = iAmMember;
 
   return (
-    <div className="min-h-[100vh] bg-gradient-to-br from-blue-50 to-green-100 px-8" onClick={()=>setShowingPane('')}>
+    <div className="min-h-[100vh] bg-gradient-to-br from-blue-50 to-green-100 px-8" onClick={() => setShowingPane('')}>
 
       {showingPane === 'events' && <EventsPane />}
-      {console.log("showing pane: " + showingPane)}
+      {showingPane === 'channels' && <ChannelsPane />}
 
       <div className="max-w-6xl mx-auto">
         <button
