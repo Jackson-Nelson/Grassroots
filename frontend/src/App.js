@@ -19,11 +19,12 @@ export const getAuthToken = () => {
   const user = localStorage.getItem("user");
 
   // user has properties uid, username, and email
-  return { JWT: tok, user: JSON.parse(user) };
+  return { JWT: tok, user: JSON.parse(user) || {uid:'',username:'', email:''} };
 }
 
 export const isLoggedOut = () => {
-  return localStorage.getItem('user') === `${null}`;
+  const res = localStorage.getItem('user');
+  return res === `${null}` || res === null;
 }
 
 export const apiURL = 'http://localhost:4000/api';
@@ -32,12 +33,13 @@ export const apiURL = 'http://localhost:4000/api';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-gray-50">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-green-100">
         {/* header */}
         <Header />
 
         {/* sidebar */}
-        <Sidebar />
+        <Sidebar>
+
 
         {/* main content */}
         <div className="flex-1 pl-24 pt-[65px]">

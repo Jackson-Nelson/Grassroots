@@ -5,7 +5,7 @@ import getLocale from '../../utils/getcoords';
 
 const placeholderImg = "https://picsum.photos/400/300";
 
-const EventCard = ({ event }) => {
+export const EventCard = ({ event }) => {
   const navigate = useNavigate();
 
   // get location from event
@@ -25,9 +25,10 @@ const EventCard = ({ event }) => {
 
   return (
     <div
-      onClick={handleClick}
-      className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[18%] mb-2 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-    >
+    onClick={handleClick}
+    className="border border-gray-200 rounded-md overflow-hidden w-full max-w-[250px] mb-2 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+    > 
+    {/* removed md:w-[18%] */}
       <div className="relative">
         <img
           src={event.image_url || placeholderImg}
@@ -94,7 +95,12 @@ const Homepage = () => {
   const [hasUserLoc, setUserLoc] = useState(false);
 
   useEffect(() => {
+    document.title = 'Home -- Grassroots'
+
     const fetchLoc = async () => {
+
+      console.log("loggedout: " + isLoggedOut())
+
       const request = new Request(`${apiURL}/me`, {
         method: "GET",
         headers: {
@@ -112,6 +118,7 @@ const Homepage = () => {
             window.location.href = "/sign-in";
             throw new Error('Failed getting your location: ' + response.text());
           }
+          throw new Error('Failed getting location')
         }
 
         const user = await response.json();
@@ -325,34 +332,6 @@ const Homepage = () => {
               )}
               {groupEvents.map((event) => (
                 <EventCard key={event.event_id} event={event} />
-              ))}
-            </div>
-          </section>
-        )}
-
-
-        {/* MY GROUPS SECTION */}
-        {!isLoggedOut() && (
-          <section className="mb-6">
-            <h2 className="text-xl font-semibold text-green-700 mb-3">
-              My Groups →
-            </h2>
-
-            {loading && <p className="text-gray-700">Loading groups...</p>}
-            {error && (
-              <p className="text-red-600">
-                Error: {error}
-              </p>
-            )}
-
-            <div className="flex flex-wrap gap-5">
-              {!loading && !error && myGroups.length === 0 && (
-                <p className="text-gray-600">
-                  You haven't joined any groups yet.
-                </p>
-              )}
-              {myGroups.map((group) => (
-                <GroupCard key={group.group_id} group={group} />
               ))}
             </div>
           </section>

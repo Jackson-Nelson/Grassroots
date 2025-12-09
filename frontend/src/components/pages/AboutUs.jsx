@@ -1,8 +1,14 @@
 import React from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const AboutUs = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = 'About Us -- Grassroots'
+  }, [])
+
 
   return (
     <div className="max-w-6xl mx-auto px-8 py-8">
@@ -20,7 +26,7 @@ const AboutUs = () => {
           <div>
             <h3 className="text-2xl font-semibold text-gray-800 mb-4">Our Vision</h3>
             <p className="text-gray-600">
-              Creating a platform where communities can come together, share ideas, and organize meaningful events 
+              Creating a platform where communities can come together, share ideas, and organize meaningful events
               to make positive change in their local areas.
             </p>
           </div>
@@ -44,7 +50,7 @@ const AboutUs = () => {
             <h3 className="text-lg font-semibold text-gray-800 mb-2">Ian Royce</h3>
             <p className="text-gray-600 text-sm mb-2">Developer</p>
             <p className="text-gray-500 text-sm">
-              IAN WRITE ABOUT YOURSELF HERE
+              Ayo its ya boy. What more need to be said?
             </p>
           </div>
           <div className="border border-gray-200 rounded-lg p-4">
@@ -61,7 +67,7 @@ const AboutUs = () => {
               I'm a Computer Science student at WWU and worked mainly frontend on this project.
             </p>
             <p className="text-gray-500 text-sm">
-                Fun facts: I love movies, browsing eBay, and collecting CDs.
+              Fun facts: I love movies, browsing eBay, and collecting CDs.
             </p>
           </div>
         </div>
@@ -71,12 +77,12 @@ const AboutUs = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-semibold text-green-700 mb-4">Learn More</h2>
         <p className="text-gray-600 mb-4">
-          Want to learn more about our research-driven development process? Check out our explainer site for 
+          Want to learn more about our research-driven development process? Check out our explainer site for
           detailed information about our platform and features!
         </p>
-        <a 
-          href="https://sites.google.com/view/grassroots-info/" 
-          target="_blank" 
+        <a
+          href="https://sites.google.com/view/grassroots-info/"
+          target="_blank"
           rel="noopener noreferrer"
           className="inline-block px-6 py-2 bg-green-700 text-white rounded hover:bg-green-800 transition-colors"
         >

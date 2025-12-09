@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { apiURL, getAuthToken, isLoggedOut } from '../../App';
 
 const placeholderImg = "https://picsum.photos/800/400";
@@ -14,7 +14,19 @@ const EventPage = () => {
   const [isCreator, setIsCreator] = useState(false);
   const [editForm, setEditForm] = useState({});
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   useEffect(() => {
+
+    if(eventId === 'new'){
+        document.title = 'New Event -- Grassroots'
+
+      setEvent({event_id:'new', group_id:searchParams.get('groupId')})
+      setLoading(false);
+      setIsEditing(true);
+      return;
+    }
+
     const fetchEvent = async () => {
       try {
         const response = await fetch(`${apiURL}/events/${eventId}`);
@@ -24,11 +36,15 @@ const EventPage = () => {
         setEvent(data);
         setEditForm(data);
 
+        document.title = data.title + ' -- Grassroots'
+
         // check if user is creator
         if (!isLoggedOut()) {
           setIsCreator(data.creator_id === getAuthToken().user.uid);
         }
       } catch (err) {
+        document.title = 'Failed to Load Event -- Grassroots'
+
         setError(err.message);
       } finally {
         setLoading(false);
@@ -46,7 +62,7 @@ const EventPage = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${getAuthToken().JWT}`
         },
-        body: JSON.stringify(editForm)
+        body: JSON.stringify({...editForm, group_id:event.group_id})
       });
 
       if (!response.ok) {
@@ -67,6 +83,10 @@ const EventPage = () => {
   };
 
   const handleCancel = () => {
+    if(eventId === 'new'){
+      window.history.go(-1);
+      return;
+    }
     setEditForm(event);
     setIsEditing(false);
   };
@@ -140,7 +160,7 @@ const EventPage = () => {
                 <h1 className="text-3xl font-bold text-green-700 mb-2">{event.title}</h1>
               )}
               <p className="text-gray-600 text-sm">
-                Hosted by <span className="font-semibold">{event.group_name}</span>
+                Hosted by <span className="font-semibold hover:underline cursor-pointer" onClick={()=>navigate(`/groups/${event.group_id}`)}>{event.group_name}</span>
               </p>
             </div>
             
@@ -223,7 +243,7 @@ const EventPage = () => {
       {/* group info */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-semibold text-green-700 mb-4">About the Group</h2>
-        <p className="font-semibold mb-2">{event.group_name}</p>
+        <p className="font-semibold mb-2 cursor-pointer hover:underline" onClick={()=>navigate(`/groups/${event.group_id}`)}>{event.group_name}</p>
         {event.group_description && <p className="text-gray-600">{event.group_description}</p>}
       </div>
     </div>
