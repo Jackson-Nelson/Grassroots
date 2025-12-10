@@ -124,8 +124,48 @@ CREATE TABLE messages (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
+-- polls tables
+CREATE TABLE polls (
+    poll_id uuid PRIMARY KEY,
+    creator_id uuid NOT NULL,
+    group_id uuid NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    poll_type VARCHAR(50) NOT NULL DEFAULT 'single_choice',  -- single_choice, multiple_choice
+    is_anonymous BOOLEAN DEFAULT FALSE,
+    allow_multiple_votes BOOLEAN DEFAULT FALSE,  -- for multiple_choice polls
+    start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end_time TIMESTAMP NOT NULL, -- maybe could be empty, but I think they should all have a time limit
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (creator_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
+);
 
+-- Poll options 
+CREATE TABLE poll_options (
+    option_id uuid PRIMARY KEY,
+    poll_id uuid NOT NULL,
+    option_text VARCHAR(500) NOT NULL,
+    option_order INTEGER NOT NULL,  -- display order
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (poll_id) REFERENCES polls(poll_id) ON DELETE CASCADE
+);
 
+-- Poll votes
+CREATE TABLE poll_votes (
+    vote_id uuid PRIMARY KEY,
+    poll_id uuid NOT NULL,
+    option_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    voted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (poll_id) REFERENCES polls(poll_id) ON DELETE CASCADE,
+    FOREIGN KEY (option_id) REFERENCES poll_options(option_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    -- Prevent duplicate votes for single-choice polls
+    UNIQUE(poll_id, user_id, option_id)
+);
 
 -- CHANGES...
 ALTER TABLE events 

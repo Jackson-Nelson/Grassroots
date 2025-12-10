@@ -5,6 +5,8 @@ import { useParams } from 'react-router-dom';
 import { useContext } from 'react';
 import { SideBarItemsContext } from '../Sidebar';
 import { EventCard } from './Homepage';
+import PollsPane from './Polls';
+
 
 
 
@@ -352,6 +354,7 @@ export default function GroupPage() {
 
       {showingPane === 'events' && <EventsPane />}
       {showingPane === 'channels' && <ChannelsPane />}
+      {showingPane === 'polls' && <PollsPane groupId={selectedGroup.id} />}
 
       <div className="max-w-6xl mx-auto">
         <button

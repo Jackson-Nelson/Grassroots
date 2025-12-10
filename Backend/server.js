@@ -696,9 +696,305 @@ app.get('/api/users/:userId', async (req, res) => {
   res.status(200).json({ username: results.rows[0].username });
 })
 
+// POLL ROUTES 
 
+// Get all polls for a group
+app.get("/api/polls", auth, async (req, res) => {
+  try {
+    const { group_id } = req.query;
 
+    if (!group_id) {
+      return res.status(400).json({ error: 'group_id parameter is required' });
+    }
 
+    const user_id = req.user;
+
+    // Delete polls that ended more than 24 hours ago
+    await pool.query(
+      `DELETE FROM polls 
+       WHERE group_id = $1 
+       AND end_time IS NOT NULL 
+       AND end_time < NOW() - INTERVAL '24 hours'`,
+      [group_id]
+    );
+
+    // Get all polls for this group
+    const pollsResult = await pool.query(
+      `SELECT p.*, u.username as creator_username
+       FROM polls p
+       JOIN users u ON p.creator_id = u.user_id
+       WHERE p.group_id = $1
+       ORDER BY p.created_at DESC`,
+      [group_id]
+    );
+
+    const polls = await Promise.all(pollsResult.rows.map(async (poll) => {
+      // Get options for this poll
+      const optionsResult = await pool.query(
+        `SELECT option_id, option_text, option_order
+         FROM poll_options
+         WHERE poll_id = $1
+         ORDER BY option_order ASC`,
+        [poll.poll_id]
+      );
+
+      // Get vote counts for each option
+      const resultsQuery = await pool.query(
+        `SELECT po.option_id, po.option_text, po.option_order, COUNT(pv.vote_id)::integer as vote_count
+         FROM poll_options po
+         LEFT JOIN poll_votes pv ON po.option_id = pv.option_id
+         WHERE po.poll_id = $1
+         GROUP BY po.option_id, po.option_text, po.option_order
+         ORDER BY po.option_order ASC`,
+        [poll.poll_id]
+      );
+
+      // Check if current user has voted
+      const voteCheck = await pool.query(
+        `SELECT 1 FROM poll_votes WHERE poll_id = $1 AND user_id = $2 LIMIT 1`,
+        [poll.poll_id, user_id]
+      );
+      const userHasVoted = voteCheck.rowCount > 0;
+
+      return {
+        ...poll,
+        options: optionsResult.rows,
+        results: resultsQuery.rows,
+        user_has_voted: userHasVoted
+      };
+    }));
+
+    res.json(polls);
+
+  } catch (err) {
+    console.error('Error fetching polls:', err);
+    res.status(500).json({ error: 'Failed to fetch polls', details: err.message });
+  }
+});
+
+// Create a new poll
+app.post("/api/polls/create", auth, async (req, res) => {
+  try {
+    const { group_id, title, description, poll_type, options, end_time } = req.body;
+    const creator_id = req.user;
+
+    // Validation
+    if (!group_id || !title || !poll_type || !options || !end_time) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (!Array.isArray(options) || options.length < 2) {
+      return res.status(400).json({ error: 'At least 2 options are required' });
+    }
+
+    if (!['single_choice', 'multiple_choice'].includes(poll_type)) {
+      return res.status(400).json({ error: 'Invalid poll_type' });
+    }
+
+    // Check if group exists
+    const groupCheck = await pool.query(
+      'SELECT group_id FROM groups WHERE group_id = $1',
+      [group_id]
+    );
+
+    if (groupCheck.rowCount === 0) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    // Insert poll
+    const pollResult = await pool.query(
+      `INSERT INTO polls (creator_id, group_id, title, description, poll_type, end_time, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW())
+       RETURNING poll_id`,
+      [creator_id, group_id, title, description || '', poll_type, end_time]
+    );
+
+    const poll_id = pollResult.rows[0].poll_id;
+
+    // Insert poll options
+    const optionPromises = options.map((optionText, index) => {
+      return pool.query(
+        `INSERT INTO poll_options (poll_id, option_text, option_order, created_at)
+         VALUES ($1, $2, $3, NOW())
+         RETURNING option_id, option_text, option_order`,
+        [poll_id, optionText, index + 1]
+      );
+    });
+
+    const optionResults = await Promise.all(optionPromises);
+    const createdOptions = optionResults.map(result => result.rows[0]);
+
+    // Get creator username
+    const userResult = await pool.query(
+      'SELECT username FROM users WHERE user_id = $1',
+      [creator_id]
+    );
+
+    // Return the created poll with options
+    res.status(201).json({
+      poll_id,
+      creator_id,
+      creator_username: userResult.rows[0].username,
+      group_id,
+      title,
+      description: description || '',
+      poll_type,
+      end_time,
+      is_active: true,
+      options: createdOptions,
+      results: createdOptions.map(opt => ({ ...opt, vote_count: 0 })),
+      user_has_voted: false
+    });
+
+  } catch (err) {
+    console.error('Error creating poll:', err);
+    res.status(500).json({ error: 'Failed to create poll', details: err.message });
+  }
+});
+
+// Submit a vote
+app.post("/api/polls/:pollId/vote", auth, async (req, res) => {
+  try {
+    const { pollId } = req.params;
+    const { option_ids } = req.body;
+    const user_id = req.user;
+
+    // Validation
+    if (!option_ids || !Array.isArray(option_ids) || option_ids.length === 0) {
+      return res.status(400).json({ error: 'option_ids array is required' });
+    }
+
+    // Get poll info
+    const pollResult = await pool.query(
+      'SELECT poll_id, poll_type, end_time, is_active FROM polls WHERE poll_id = $1',
+      [pollId]
+    );
+
+    if (pollResult.rowCount === 0) {
+      return res.status(404).json({ error: 'Poll not found' });
+    }
+
+    const poll = pollResult.rows[0];
+
+    // Check if poll is still active
+    if (!poll.is_active || (poll.end_time && new Date(poll.end_time) < new Date())) {
+      return res.status(400).json({ error: 'Poll has ended' });
+    }
+
+    // Check if user already voted
+    const existingVote = await pool.query(
+      'SELECT vote_id FROM poll_votes WHERE poll_id = $1 AND user_id = $2',
+      [pollId, user_id]
+    );
+
+    if (existingVote.rowCount > 0) {
+      return res.status(400).json({ error: 'You have already voted in this poll' });
+    }
+
+    // Validate poll type
+    if (poll.poll_type === 'single_choice' && option_ids.length > 1) {
+      return res.status(400).json({ error: 'Only one option allowed for single choice polls' });
+    }
+
+    // Verify all option_ids belong to this poll
+    const optionsCheck = await pool.query(
+      'SELECT option_id FROM poll_options WHERE poll_id = $1 AND option_id = ANY($2)',
+      [pollId, option_ids]
+    );
+
+    if (optionsCheck.rowCount !== option_ids.length) {
+      return res.status(400).json({ error: 'Invalid option_ids' });
+    }
+
+    // Insert votes
+    const votePromises = option_ids.map(option_id => {
+      return pool.query(
+        `INSERT INTO poll_votes (poll_id, option_id, user_id, voted_at)
+         VALUES ($1, $2, $3, NOW())`,
+        [pollId, option_id, user_id]
+      );
+    });
+
+    await Promise.all(votePromises);
+
+    // Get updated results
+    const resultsQuery = await pool.query(
+      `SELECT po.option_id, po.option_text, po.option_order, COUNT(pv.vote_id) as vote_count
+       FROM poll_options po
+       LEFT JOIN poll_votes pv ON po.option_id = pv.option_id
+       WHERE po.poll_id = $1
+       GROUP BY po.option_id, po.option_text, po.option_order
+       ORDER BY po.option_order ASC`,
+      [pollId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Vote submitted successfully',
+      results: resultsQuery.rows
+    });
+
+  } catch (err) {
+    console.error('Error submitting vote:', err);
+    res.status(500).json({ error: 'Failed to submit vote', details: err.message });
+  }
+});
+
+// Get results for a specific poll
+app.get("/api/polls/:pollId/results", async (req, res) => {
+  try {
+    const { pollId } = req.params;
+
+    // Get poll info
+    const pollResult = await pool.query(
+      `SELECT p.*, u.username as creator_username
+       FROM polls p
+       JOIN users u ON p.creator_id = u.user_id
+       WHERE p.poll_id = $1`,
+      [pollId]
+    );
+
+    if (pollResult.rowCount === 0) {
+      return res.status(404).json({ error: 'Poll not found' });
+    }
+
+    // Get results with vote counts and percentages
+    const resultsQuery = await pool.query(
+      `SELECT 
+        po.option_id,
+        po.option_text,
+        po.option_order,
+        COUNT(pv.vote_id) as vote_count,
+        ROUND(
+          (COUNT(pv.vote_id)::FLOAT / NULLIF(
+            (SELECT COUNT(DISTINCT user_id) FROM poll_votes WHERE poll_id = $1), 0
+          )) * 100, 2
+        ) as percentage
+       FROM poll_options po
+       LEFT JOIN poll_votes pv ON po.option_id = pv.option_id
+       WHERE po.poll_id = $1
+       GROUP BY po.option_id, po.option_text, po.option_order
+       ORDER BY po.option_order ASC`,
+      [pollId]
+    );
+
+    // Get total unique voters
+    const votersQuery = await pool.query(
+      'SELECT COUNT(DISTINCT user_id) as total_voters FROM poll_votes WHERE poll_id = $1',
+      [pollId]
+    );
+
+    res.json({
+      poll: pollResult.rows[0],
+      results: resultsQuery.rows,
+      total_voters: parseInt(votersQuery.rows[0].total_voters)
+    });
+
+  } catch (err) {
+    console.error('Error fetching poll results:', err);
+    res.status(500).json({ error: 'Failed to fetch results', details: err.message });
+  }
+});
 
 
 app.listen(process.env.PORT, () => console.log("Server listening on localhost:" + process.env.PORT))
