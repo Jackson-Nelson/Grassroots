@@ -5,6 +5,8 @@ import { apiURL, getAuthToken, isLoggedOut } from '../../App';
 // Mock getAuthToken function for demo
 // const getAuthToken = () => ({ JWT: 'demo-token', uid: 'user-123' });
 
+const placeholderImg = "https://picsum.photos/800/400";
+
 
 export default function Groups() {
   const [groups, setGroups] = useState([]);
@@ -278,9 +280,10 @@ export default function Groups() {
                   className="bg-white rounded-lg p-6 cursor-pointer shadow-md hover:shadow-xl transition-shadow"
                 >
                   <div className="flex items-start gap-3 mb-3">
-                    <div className="bg-green-100 p-3 rounded-lg">
-                      <Users className="w-6 h-6 text-green-600" />
-                    </div>
+                    <img 
+                      src={group.avatar_url || placeholderImg} 
+                      className="w-12 h-12 rounded-lg object-cover flex-shrink-0" 
+                    />
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-gray-800 mb-1">
                         {group.name}

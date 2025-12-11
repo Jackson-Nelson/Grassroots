@@ -215,10 +215,9 @@ app.get("/api/events/my-group-events", auth, async (req, res) => {
 });
 
 // EVENT PAGES: fetching individual event info
-app.get("/api/events/:eventId", auth, async (req, res) => {
+app.get("/api/events/:eventId", async (req, res) => {
   try {
     const { eventId } = req.params;
-    const userId = req.user;
 
     // get event
     const eventResult = await pool.query(
@@ -271,7 +270,7 @@ app.post("/api/events/:eventId/rsvp", auth, async (req, res) => {
     const { eventId } = req.params;
     const userId = req.user;
 
-    // Check if event exists
+    // check if event exists
     const eventResult = await pool.query(
       'SELECT event_id FROM events WHERE event_id = $1',
       [eventId]
@@ -281,7 +280,7 @@ app.post("/api/events/:eventId/rsvp", auth, async (req, res) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    // Check if user already RSVP'd
+    // 
     const existingRsvp = await pool.query(
       `SELECT rsvp_status FROM event_attendees 
        WHERE event_id = $1 AND user_id = $2`,
@@ -485,6 +484,96 @@ const getGroupData = async (gid) => {
 // GROUP ROUTES //
 
 // INDIVIDUAL GROUP PAGES
+
+
+// UPDATE GROUP: update group info (requires auth, only creator can update)
+app.put("/api/groups/:groupId", auth, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const userId = req.user;
+    const { name, description, contact_email, contact_phone, tags, avatar_url } = req.body;
+
+    // check group exists and user is the creator
+    const groupResult = await pool.query(
+      'SELECT creator_id FROM groups WHERE group_id = $1',
+      [groupId]
+    );
+
+    if (groupResult.rowCount === 0) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    if (groupResult.rows[0].creator_id !== userId) {
+      return res.status(403).json({ error: 'Only the group creator can update this group' });
+    }
+
+    // update query
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (name !== undefined) {
+      updates.push(`name = $${paramIndex++}`);
+      values.push(name);
+    }
+    if (description !== undefined) {
+      updates.push(`description = $${paramIndex++}`);
+      values.push(description);
+    }
+    if (contact_email !== undefined) {
+      updates.push(`contact_email = $${paramIndex++}`);
+      values.push(contact_email || null);
+    }
+    if (contact_phone !== undefined) {
+      updates.push(`contact_phone = $${paramIndex++}`);
+      values.push(contact_phone || null);
+    }
+    if (avatar_url !== undefined && avatar_url !== null && avatar_url !== '') {
+      updates.push(`avatar_url = $${paramIndex++}`);
+      values.push(avatar_url);
+    }
+
+    if (updates.length > 0) {
+      updates.push(`updated_at = NOW()`);
+      values.push(groupId);
+      
+      await pool.query(
+        `UPDATE groups SET ${updates.join(', ')} WHERE group_id = $${paramIndex}`,
+        values
+      );
+    }
+
+    // update tags
+    if (tags !== undefined && Array.isArray(tags)) {
+      // delete existing tags?? don't know if i should keep this every edit but there should be a way to delete tags too.
+      await pool.query('DELETE FROM tags WHERE gid = $1', [groupId]);
+      
+      // insert new tags
+      for (const tag of tags) {
+        if (tag && tag.trim()) {
+          await pool.query('INSERT INTO tags (gid, tag) VALUES ($1, $2)', [groupId, tag.trim()]);
+        }
+      }
+    }
+
+    // fetch updated group
+    const updatedGroup = await getGroupData(groupId);
+    
+    if (!updatedGroup) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    res.json(updatedGroup);
+
+  } catch (err) {
+    console.error('Error updating group:', err);
+    res.status(500).json({ error: 'Failed to update group', details: err.message });
+  }
+});
+
+
+
+
 app.get("/api/group/:groupId", async (req, res) => { // successful response is a group with all db fields + tags + members
   const groupId = req.params.groupId;
   console.log("serving group: " + groupId);
@@ -678,8 +767,7 @@ app.post("/api/groups/create", auth, async (req, res) => {
 
 
   //all checks passed, create group
-  result = await pool.query(
-    "INSERT INTO groups (name, description, city, state, country, creator_id, created_at, contact_email, contact_phone) VALUES($1, $2, $3, $4, $5, $6, NOW(), $7, $8) RETURNING group_id", [name, desc, city, state, country, creator_id, contact_email || null, contact_phone || null]);
+  result = await pool.query("INSERT INTO groups (name, description, city, state, country, creator_id, created_at) VALUES($1, $2, $3, $4, $5, $6, NOW()) RETURNING group_id", [name, desc, city, state, country, creator_id])
 
   const group_id = result.rows[0].group_id;
 
@@ -1096,6 +1184,55 @@ app.get("/api/polls/:pollId/results", async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch results', details: err.message });
   }
 });
+
+// CHANNEL MODAL
+app.post("/api/groups/:groupId/channels/create", auth, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { name } = req.body;
+    const userId = req.user;
+
+    // Validate input
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Channel name is required' });
+    }
+
+    if (name.trim().length < 2) {
+      return res.status(400).json({ error: 'Channel name must be at least 2 characters' });
+    }
+
+    if (name.trim().length > 50) {
+      return res.status(400).json({ error: 'Channel name must be 50 characters or less' });
+    }
+
+
+    // Check if channel name already exists in this group
+    const channelCheck = await pool.query(
+      'SELECT channel_id FROM channels WHERE group_id = $1 AND LOWER(name) = LOWER($2)',
+      [groupId, name.trim()]
+    );
+
+    if (channelCheck.rowCount > 0) {
+      return res.status(400).json({ error: 'A channel with this name already exists' });
+    }
+    
+    const result = await pool.query(
+      `INSERT INTO channels (group_id, name)
+       VALUES ($1, $2)
+       RETURNING channel_id, name, group_id`,
+      [groupId, name.trim()]
+    );
+
+    const newChannel = result.rows[0];
+
+    res.status(201).json(newChannel);
+
+  } catch (err) {
+    console.error('Error creating channel:', err);
+    res.status(500).json({ error: 'Failed to create channel', details: err.message });
+  }
+});
+
 
 
 app.listen(process.env.PORT, () => console.log("Server listening on localhost:" + process.env.PORT))

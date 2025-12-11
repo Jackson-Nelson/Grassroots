@@ -1,5 +1,10 @@
 # Grassroots
-Pre-requisites to run our code:
+
+The website should now be accessible by
+https://grassroots.cs.wwu.edu/
+
+However, if that doesn't work, here's how to run our code:
+
 1. Install PostgreSQL
 a. Remember the password you set for postgres and the port you choose.
 b. Create a database called “grassroots” and run schema.sql to create the

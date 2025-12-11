@@ -5,6 +5,16 @@ import getLocale from '../../utils/getcoords';
 
 const placeholderImg = "https://picsum.photos/400/300";
 
+// sorts events chronologically for viewing purposes
+const sortEventsChronologically = (events) => {
+  return [...events].sort((a, b) => {
+    const dateA = new Date(a.event_date);
+    const dateB = new Date(b.event_date);
+    console.log('Comparing:', dateA, 'vs', dateB, '=', dateA - dateB);
+    return dateA - dateB;
+  });
+};
+
 export const EventCard = ({ event }) => {
   const navigate = useNavigate();
 
@@ -14,9 +24,9 @@ export const EventCard = ({ event }) => {
     : `${event.address}, ${event.city}, ${event.country}`;
 
   // format date
-  const eventDate = new Date(event.event_date).toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric' 
+  const eventDate = new Date(event.event_date).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
   });
 
   const handleClick = () => {
@@ -25,8 +35,8 @@ export const EventCard = ({ event }) => {
 
   return (
     <div
-    onClick={handleClick}
-    className="border border-gray-200 rounded-md overflow-hidden w-[250px] flex-shrink-0 mb-2 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+      onClick={handleClick}
+      className="border border-gray-200 rounded-md overflow-hidden w-[250px] flex-shrink-0 mb-2 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
     >
       <div className="relative">
         <img
@@ -155,20 +165,21 @@ const Homepage = () => {
           throw new Error(`Failed to fetch events: ${eventsRes.status} ${errorText}`);
         }
         const eventsData = await eventsRes.json();
-        setNearbyEvents(eventsData);
+        const sortedEvents = sortEventsChronologically(eventsData);
+        setNearbyEvents(sortedEvents);
 
-        
-          // fetch nearby groups
-          const nearbyGroupsUrl = new URL(`${apiURL}/groups/nearby`);
-          nearbyGroupsUrl.searchParams.append('city', hasUserLoc.city);
-          nearbyGroupsUrl.searchParams.append('state', hasUserLoc.state);
-          nearbyGroupsUrl.searchParams.append('country', hasUserLoc.country);
 
-          const nearbyGroupsRes = await fetch(nearbyGroupsUrl);
-          if (nearbyGroupsRes.ok) {
-            const nearbyGroupsData = await nearbyGroupsRes.json();
-            setNearbyGroups(nearbyGroupsData);
-          }
+        // fetch nearby groups
+        const nearbyGroupsUrl = new URL(`${apiURL}/groups/nearby`);
+        nearbyGroupsUrl.searchParams.append('city', hasUserLoc.city);
+        nearbyGroupsUrl.searchParams.append('state', hasUserLoc.state);
+        nearbyGroupsUrl.searchParams.append('country', hasUserLoc.country);
+
+        const nearbyGroupsRes = await fetch(nearbyGroupsUrl);
+        if (nearbyGroupsRes.ok) {
+          const nearbyGroupsData = await nearbyGroupsRes.json();
+          setNearbyGroups(nearbyGroupsData);
+        }
 
         if (!isLoggedOut()) {
           // fetch my groups
@@ -238,17 +249,19 @@ const Homepage = () => {
         {/* EVENTS NEAR ME SECTION */}
         <section className="mb-6">
           <div className="flex justify-between items-center mb-5">
-            <h2 className="text-xl font-semibold text-green-700">
-              Events Near Me
+            <h2 className="text-xl font-semibold text-green-700 hover:text-green-800 hover:underline cursor-pointer"
+              onClick={() => nearbyEvents.length > 0 && navigate('/events/nearby')}
+            >
+              Events Near Me →
             </h2>
-            {nearbyEvents.length > 0 && (
+            {/* {nearbyEvents.length > 0 && (
               <button
                 onClick={() => navigate('/events/nearby')}
                 className="text-green-700 hover:text-green-800 hover:underline font-medium"
               >
                 See More →
               </button>
-            )}
+            )} */}
           </div>
 
           {loading && <p className="text-gray-700">Loading events...</p>}
@@ -271,40 +284,42 @@ const Homepage = () => {
         </section>
 
         {/* GROUPS NEAR ME SECTION */}
-         
-          <section className="mb-6">
-            <div className="flex justify-between items-center mb-5">
-              <h2 className="text-xl font-semibold text-green-700">
-                Groups Near Me
-              </h2>
-              {nearbyGroups.length > 0 && (
-                <button
-                  onClick={() => navigate('/groups/nearby')}
-                  className="text-green-700 hover:text-green-800 hover:underline font-medium"
-                >
-                  See More →
-                </button>
-              )}
-            </div>
 
-            {loading && <p className="text-gray-700">Loading groups...</p>}
-            {error && (
-              <p className="text-red-600">
-                Error: {error}
+        <section className="mb-6">
+          <div className="flex justify-between items-center mb-5">
+            <h2 className="text-xl font-semibold text-green-700 hover:text-green-800 hover:underline cursor-pointer"
+              onClick={() => nearbyGroups.length > 0 && navigate('/groups/nearby')}
+            >
+              Groups Near Me →
+            </h2>
+            {/* {nearbyGroups.length > 0 && (
+              <button
+                onClick={() => navigate('/groups/nearby')}
+                className="text-green-700 hover:text-green-800 hover:underline font-medium"
+              >
+                See More →
+              </button>
+            )} */}
+          </div>
+
+          {loading && <p className="text-gray-700">Loading groups...</p>}
+          {error && (
+            <p className="text-red-600">
+              Error: {error}
+            </p>
+          )}
+
+          <div className="flex gap-5 overflow-x-auto pb-2 no-scrollbar">
+            {!loading && !error && nearbyGroups.length === 0 && (
+              <p className="text-gray-600">
+                No groups found in your area.
               </p>
             )}
-
-            <div className="flex gap-5 overflow-x-auto pb-2 no-scrollbar">
-              {!loading && !error && nearbyGroups.length === 0 && (
-                <p className="text-gray-600">
-                  No groups found in your area.
-                </p>
-              )}
-              {nearbyGroups.map((group) => (
-                <GroupCard key={group.group_id} group={group} />
-              ))}
-            </div>
-          </section>
+            {nearbyGroups.map((group) => (
+              <GroupCard key={group.group_id} group={group} />
+            ))}
+          </div>
+        </section>
 
       </main>
 

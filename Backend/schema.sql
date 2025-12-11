@@ -34,7 +34,7 @@ CREATE TABLE groups (
     zip INTEGER,
     country VARCHAR(255) NOT NULL,
     creator_id uuid NOT NULL,
-    avatar_url VARCHAR(500),
+    avatar_url TEXT,
     is_private BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -128,7 +128,7 @@ CREATE TABLE messages (
 
 -- polls tables
 CREATE TABLE polls (
-    poll_id uuid PRIMARY KEY,
+    poll_id uuid DEFAULT uuidv4() PRIMARY KEY,
     creator_id uuid NOT NULL,
     group_id uuid NOT NULL,
     title VARCHAR(255) NOT NULL,
@@ -147,7 +147,7 @@ CREATE TABLE polls (
 
 -- Poll options 
 CREATE TABLE poll_options (
-    option_id uuid PRIMARY KEY,
+    option_id uuid DEFAULT uuidv4() PRIMARY KEY,
     poll_id uuid NOT NULL,
     option_text VARCHAR(500) NOT NULL,
     option_order INTEGER NOT NULL,  -- display order
@@ -157,7 +157,7 @@ CREATE TABLE poll_options (
 
 -- Poll votes
 CREATE TABLE poll_votes (
-    vote_id uuid PRIMARY KEY,
+    vote_id uuid DEFAULT uuidv4() PRIMARY KEY,
     poll_id uuid NOT NULL,
     option_id uuid NOT NULL,
     user_id uuid NOT NULL,

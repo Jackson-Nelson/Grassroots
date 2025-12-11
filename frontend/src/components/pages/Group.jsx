@@ -7,6 +7,9 @@ import { SideBarItemsContext } from '../Sidebar';
 import { EventCard } from './Homepage';
 import PollsPane from './Polls';
 
+const placeholderImg = "https://picsum.photos/800/400";
+
+
 
 export default function GroupPage() {
   // const [groups, setGroups] = useState([]);
@@ -20,11 +23,57 @@ export default function GroupPage() {
   const messagesEndRef = useRef(null);
   const [showingPane, setShowingPane] = useState('');
   const [sidebarButtonPressed, setSidebarPressed] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [isCreator, setIsCreator] = useState(false);
+  const [editForm, setEditForm] = useState({});
+  const [error, setError] = useState(null);
+  const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
+  const [newChannel, setNewChannel] = useState({ name: '' });
   const [lastFetchedMessages, setLastFetchedMessages] = useState(0);
 
   const groupId = useParams().groupId;
 
   const { addSidebarCluster, removeSidebarCluster } = useContext(SideBarItemsContext);
+
+const createChannel = async () => {
+  if (!newChannel.name.trim()) {
+    return;
+  }
+
+  const request = new Request(`${apiURL}/groups/${selectedGroup.id}/channels/create`, {
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + getAuthToken().JWT
+    },
+    body: JSON.stringify({
+      name: newChannel.name.trim(),
+    })
+  });
+
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error creating channel:', errorText);
+      alert('Failed to create channel: ' + errorText);
+      return;
+    }
+
+    const newChannelData = await response.json();
+    setSelectedGroup({
+      ...selectedGroup,
+      channels: [...selectedGroup.channels, newChannelData]
+    });
+
+    setNewChannel({ name: '' });
+    setShowCreateChannelModal(false);
+  } catch (err) {
+    console.error('Error creating channel:', err);
+    alert('Failed to create channel. Please try again.');
+  }
+};
+
 
   const EventsPane = () => {
     return (
@@ -77,25 +126,25 @@ export default function GroupPage() {
                         placeholder="Enter your name..."
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                         /> */}
-            <button
-              onClick={() => { }}
-              className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Create Channel
-            </button>
-          </div>
-        }
-        Channels:
-        {selectedGroup.channels.length === 0 ? "No channels? 🤨"
-          : selectedGroup.channels.map((channel) => {
-            return (<div className='flex flex-row items-center mt-[10px] shadow rounded from-blue-50 to-green-100 hover:bg-green-50 cursor-pointer' onClick={() => setSelectedChannel(channel)}>
-              <Hash className='mx-1 w-4 h-4' />
-              <div>{channel.name}</div>
+              <button
+                onClick={() => setShowCreateChannelModal(true)}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
+                >
+                <Plus className="w-4 h-4" />
+                Create Channel
+              </button>
             </div>
-            )
-          })}
-      </div>
+          }
+          Channels:
+          {selectedGroup.channels.length === 0 ? "No channels? 🤨"
+            : selectedGroup.channels.map((channel) => {
+              return (<div className='flex flex-row items-center mt-[10px] shadow rounded from-blue-50 to-green-100 hover:bg-green-50 cursor-pointer' onClick={() => setSelectedChannel(channel)}>
+                <Hash className='mx-1 w-4 h-4'/>
+                <div>{channel.name}</div>
+              </div>
+              )
+            })}
+        </div>
       // </div>
     )
   }
@@ -110,6 +159,8 @@ export default function GroupPage() {
     });
     });
   };
+
+  
 
 
   useEffect(() => {
@@ -134,7 +185,6 @@ export default function GroupPage() {
       { icon: Hash, label: "Channels", onClick: (() => setSidebarPressed('channels')) },
       { icon: CalendarDays, label: "Group Events", onClick: (() => setSidebarPressed('events')) },
       { icon: BarChart3, label: "Polls", onClick: (() => setSidebarPressed('polls')) },
-      { icon: FolderOpen, label: "Resources", path: "/resources" },
     ]
 
     addSidebarCluster({ groupLabel: selectedGroup.name, menuItems: GROUPS_PAGE_ITEMS })
@@ -142,6 +192,89 @@ export default function GroupPage() {
     // return () =>{ removeSidebarCluster(selectedGroup.name);console.log("RAN CLEANUP");}
 
   }, [selectedGroup]);
+
+  // EDITING THE GROUP PAGE
+  const handleSave = async () => {
+    try {
+      // Convert tagsInput string to array if it exists
+      const formData = { ...editForm };
+      if (formData.tagsInput !== undefined) {
+        const tagsArray = formData.tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+        formData.tags = tagsArray;
+        delete formData.tagsInput;
+      }
+
+      const response = await fetch(`${apiURL}/groups/${groupId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken().JWT}`
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to update group' }));
+        const errorMessage = errorData.details || errorData.error || `Failed to update group (${response.status})`;
+        console.error('Backend error response:', errorData);
+        throw new Error(errorMessage);
+      }
+      
+      const updated = await response.json();
+      setSelectedGroup(updated);
+      setEditForm({
+        ...updated,
+        tagsInput: (updated.tags || []).join(', ') // convert back to string for editing
+      });
+      setIsEditing(false);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error updating group:', err);
+    }
+  };
+
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+
+      // validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file');
+        return;
+      }
+
+      // convert to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditForm({ ...editForm, avatar_url: reader.result });
+      };
+      reader.onerror = () => {
+        setError('Failed to read image file');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+
+  const handleCancel = () => {
+    setEditForm({
+      ...selectedGroup,
+      tagsInput: (selectedGroup.tags || []).join(', ') // convert back to string for editing later
+    });
+    setIsEditing(false);
+  };
+
+  const handleChange = (e) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+  const handleTagsChange = (e) => {
+    // converts to array when save
+    setEditForm({ ...editForm, tagsInput: e.target.value });
+  };
+
+
 
 
   // get group info when you go to group's page
@@ -176,10 +309,19 @@ export default function GroupPage() {
           ...groupInfo,
           id: groupInfo.group_id
         })
+        setEditForm({
+          ...groupInfo,
+          tagsInput: (groupInfo.tags || []).join(', ')
+        });
 
         setSelectedChannel(groupInfo.channels.find((c) => c.name === 'default') || groupInfo.channels[0]);
 
         setIAmMember(!isLoggedOut() && groupInfo.members.find((memb) => memb.user_id === getAuthToken().user.uid))
+        
+        // Check if user is creator
+        if (!isLoggedOut()) {
+          setIsCreator(groupInfo.creator_id === getAuthToken().user.uid);
+        }
 
       } catch (err) {
         console.error("Error fetching group info: " + err);
@@ -428,74 +570,188 @@ export default function GroupPage() {
   const isMember = iAmMember;
 
   return (
-    <div className="min-h-[100vh] bg-gray-50 px-8" onClick={() => setShowingPane('')}>
+    <div className="min-h-[100vh] bg-gray-50" onClick={() => setShowingPane('')}>
 
       {showingPane === 'events' && <EventsPane />}
       {showingPane === 'channels' && <ChannelsPane />}
       {showingPane === 'polls' && <PollsPane groupId={selectedGroup.id} />}
 
-      <div className="max-w-6xl mx-auto">
-        <button
-          onClick={goBack}
-          className="mb-6 text-green-600 hover:text-green-800 font-medium flex items-center gap-2"
-        >
-          ← Back to Groups
-        </button>
+      <div className="max-w-6xl mx-auto px-8 py-4">
+
+        {/* Back to Groups Button and Edit Group Button */}
+        <div className="flex justify-between items-center mb-4">
+          <button
+            onClick={goBack}
+            className="text-green-600 hover:text-green-800 font-medium flex items-center gap-2"
+          >
+            ← Back to Groups
+          </button>
+
+          {/* Edit Group Button */}
+          {isCreator && !isEditing && (
+            <button 
+              onClick={() => { setIsEditing(true); setError(null); }} 
+              className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 text-sm"
+            >
+              Edit Group
+            </button>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Group Info Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg p-6 shadow-md">
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                  <Users className="w-7 h-7 text-green-600" />
-                  {selectedGroup.name}
-                </h1>
-                <p className="text-gray-600 text-sm mb-3">{selectedGroup.description}</p>
-
-                {/* Contact Us section - added right under description */}
-                {selectedGroup.contact_email || selectedGroup.contact_phone ? (
-                  <div className="mb-4">
-                    <p className="text-sm font-medium text-gray-700 mb-1">Contact Us</p>
-                    {selectedGroup.contact_email && (
-                      <p className="text-sm text-gray-600">{selectedGroup.contact_email}</p>
-                    )}
-                    {selectedGroup.contact_phone && (
-                      <p className="text-sm text-gray-600">{selectedGroup.contact_phone}</p>
-                    )}
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                {/* Group Image */}
+                <img 
+                  src={isEditing && editForm.avatar_url ? editForm.avatar_url : (selectedGroup.avatar_url || placeholderImg)} 
+                  alt={selectedGroup.name}
+                  className="w-full h-48 object-cover" 
+                />
+                
+                <div className="p-6">
+                  <div className="mb-6">
+                  {/* Group Name */}
+                  <div className="flex justify-between items-start mb-2">
+                    <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                      {isEditing ? (
+                        <input
+                          name="name"
+                          value={editForm.name || ''}
+                          onChange={handleChange}
+                          className="text-2xl font-bold text-gray-800 border rounded px-3 py-1"
+                        />
+                      ) : (
+                        selectedGroup.name
+                      )}
+                    </h1>
                   </div>
-                ) : null}
-              </div>
-
-              {selectedGroup.tags && selectedGroup.tags.length > 0 && (
-                <div className="mb-6">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Tags:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedGroup.tags.map((tag, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {selectedGroup.members.length > 0 && (
-                <div className="mb-6">
-                  <p className="text-sm font-medium text-gray-700 mb-3">
-                    Members ({selectedGroup.members.length}):
-                  </p>
-                  <div className="space-y-2">
-                    {selectedGroup.members.map((member, idx) => (
-                      <div key={idx} className="px-3 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        {member.username}
+                  
+                  {/* Group Description */}
+                  {isEditing ? (
+                    <textarea
+                      name="description"
+                      rows="10"
+                      placeholder="Group description"
+                      value={editForm.description || ''}
+                      onChange={handleChange}
+                      className="w-full border rounded px-3 py-2 mb-3 text-sm"
+                    />
+                  ) : (
+                    <p className="text-gray-600 text-sm mb-3">{selectedGroup.description}</p>
+                  )}
+                  
+                  {/* Contact Us section */}
+                  {isEditing ? (
+                    <div className="mb-4 space-y-2">
+                      <p className="text-sm font-medium text-gray-700">Contact Information:</p>
+                      <input
+                        type="email"
+                        name="contact_email"
+                        value={editForm.contact_email || ''}
+                        onChange={handleChange}
+                        placeholder="Contact Email"
+                        className="w-full border rounded px-3 py-1 text-sm"
+                      />
+                      <input
+                        type="tel"
+                        name="contact_phone"
+                        value={editForm.contact_phone || ''}
+                        onChange={handleChange}
+                        placeholder="Contact Phone"
+                        className="w-full border rounded px-3 py-1 text-sm"
+                      />
+                    </div>
+                  ) : (
+                    (selectedGroup.contact_email || selectedGroup.contact_phone) && (
+                      <div className="mb-4">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Contact Us</p>
+                        {selectedGroup.contact_email && (
+                          <p className="text-sm text-gray-600">{selectedGroup.contact_email}</p>
+                        )}
+                        {selectedGroup.contact_phone && (
+                          <p className="text-sm text-gray-600">{selectedGroup.contact_phone}</p>
+                        )}
                       </div>
-                    ))}
+                    )
+                  )}
                   </div>
-                </div>
-              )}
+                
+                {/* Tags section */}
+                {isEditing ? (
+                  <div className="mb-6">
+                    <p className="block text-sm font-medium text-gray-700 mb-2">Tags (comma-separated):</p>
+                    <input
+                      type="text"
+                      value={editForm.tagsInput || ''}
+                      onChange={handleTagsChange}
+                      placeholder="tag1, tag2, tag3"
+                      className="w-full border rounded px-3 py-2 text-sm"
+                    />
+                  </div>
+                ) : (
+                  selectedGroup.tags && selectedGroup.tags.length > 0 && (
+                    <div className="mb-6">
+                      <p className="text-sm font-medium text-gray-700 mb-2">Tags:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedGroup.tags.map((tag, idx) => (
+                          <span key={idx} className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                )}
 
+                {/* edit image */}
+                {isEditing && (
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-semibold mb-2">Group Image:</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="w-full border rounded px-3 py-2 mb-2"
+                    />
+                    {error && (
+                      <p className="text-sm text-red-600 mb-2">{error}</p>
+                    )}
+                    {editForm.avatar_url && !error && (
+                      <p className="text-sm text-green-600 mb-4">✓ Image selected. Click Save to update.</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Save and Cancel Buttons */}
+                {isEditing && (
+                  <div className="flex gap-3 mb-6">
+                    <button onClick={handleSave} className="px-6 py-2 bg-green-700 text-white rounded hover:bg-green-800">
+                      Save
+                    </button>
+                    <button onClick={handleCancel} className="px-6 py-2 bg-gray-300 rounded hover:bg-gray-400">
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              
+                {/* Members */}
+                {selectedGroup.members.length > 0 && (
+                  <div className="mb-6">
+                    <p className="text-sm font-medium text-gray-700 mb-3">
+                      Members ({selectedGroup.members.length}):
+                    </p>
+                    <div className="space-y-2">
+                      {selectedGroup.members.map((member, idx) => (
+                        <div key={idx} className="px-3 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          {member.username}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              
               {isLoggedOut() ?
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Sign in to join groups!
@@ -544,8 +800,9 @@ export default function GroupPage() {
                     </button>
                   </div>
               }
+                </div>
+              </div>
             </div>
-          </div>
 
           {/* Chat Area */}
           <div className="lg:col-span-2">
@@ -620,10 +877,60 @@ export default function GroupPage() {
                   </p>
                 </div>
               )}
+
+              {showCreateChannelModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg max-w-md w-full p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold text-gray-800">Create New Channel</h2>
+                    <button
+                      onClick={() => setShowCreateChannelModal(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                          
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Channel Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={newChannel.name}
+                        onChange={(e) => setNewChannel({ ...newChannel, name: e.target.value })}
+                        onKeyPress={(e) => e.key === 'Enter' && newChannel.name.trim() && createChannel()}
+                        placeholder="Enter channel name..."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                          
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        onClick={() => setShowCreateChannelModal(false)}
+                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={createChannel}
+                        disabled={!newChannel.name.trim()}
+                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Create
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             </div>
           </div>
         </div>
       </div>
     </div>
+    
   );
 }
