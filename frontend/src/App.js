@@ -29,7 +29,7 @@ export const isLoggedOut = () => {
   return res === `${null}` || res === null;
 }
 
-export const apiURL = 'http://localhost:4000/api';
+export const apiURL = 'https://grassroots.cs.wwu.edu/api';
 // const pages = [["home", Homepage], ["sign-in", Auth], ["groups", Groups] ];
 
 function App() {

@@ -244,7 +244,7 @@ app.get("/api/events/:eventId", auth, async (req, res) => {
          WHERE event_id = $1 AND user_id = $2`,
         [eventId, userId]
       );
-      
+
       if (rsvpResult.rowCount > 0) {
         event.user_rsvp_status = rsvpResult.rows[0].rsvp_status;
         event.has_rsvpd = true;
@@ -498,7 +498,7 @@ app.get("/api/group/:groupId", async (req, res) => { // successful response is a
       return res.sendStatus(404);
     }
 
-    console.log(group);
+    // console.log(group);
 
     res.status(200).json(group);
 
@@ -639,7 +639,7 @@ app.get("/api/groups/nearby", async (req, res) => {
 
 // GROUPS PAGE: create new group, requires authentication
 app.post("/api/groups/create", auth, async (req, res) => {
-  const { name, desc, tags, contact_email, contact_phone} = req.body;
+  const { name, desc, tags, contact_email, contact_phone } = req.body;
   const creator_id = req.user;
 
   console.log("begin group creation: " + name)
@@ -702,12 +702,10 @@ app.post("/api/groups/create", auth, async (req, res) => {
 
 // MESSAGE ROUTES //
 
+
 app.get("/api/messages/history/:channelId", async (req, res) => {
 
   const channelId = req.params.channelId;
-
-  console.log("Getting message history for group: " + channelId);
-
 
   // check if group exists
   let results = await pool.query('SELECT channel_id FROM channels WHERE channels.channel_id = $1', [channelId]);
@@ -715,13 +713,47 @@ app.get("/api/messages/history/:channelId", async (req, res) => {
     return res.sendStatus(404);
   }
 
-  results = await pool.query('SELECT * FROM messages JOIN channels using(channel_id) JOIN users using(user_id) WHERE channels.channel_id = $1', [channelId]);
+  console.log("Getting message history for group: " + channelId);
+
+  results = await pool.query('SELECT messages.*, users.user_id, users.username, users.email FROM messages JOIN channels using(channel_id) JOIN users using(user_id) WHERE channel_id = $1 ORDER BY created_at ASC', [channelId]);
   const msgs = results.rows;
-  console.log(msgs[0]);
+
+  if(results.rowCount > 0)
+    console.log(msgs[0]);
+    
 
   return res.status(200).json(msgs);
-
 })
+
+app.post("/api/messages/history/:channelId/since", async (req, res) => {
+
+  const channel_id = req.params.channelId;
+  const { newerThan } = req.body;
+  // console.log(newerThan === 0);
+
+  try {
+console.log("newer than: \n" + newerThan)
+    const results = await
+      (newerThan === 0 ?
+        pool.query('SELECT messages.*, users.user_id, users.username, users.email FROM messages JOIN channels using(channel_id) JOIN users using(user_id) WHERE channel_id = $1 ORDER BY created_at ASC', [channel_id]) :
+        pool.query("SELECT messages.*, users.user_id, users.username, users.email FROM messages JOIN channels ON channels.channel_id = messages.channel_id JOIN users ON users.user_id = messages.user_id WHERE channels.channel_id = $1 AND $2::timestamptz < date_trunc('milliseconds', messages.created_at) ORDER BY messages.created_at ASC", [channel_id, newerThan]));
+
+        const test = await pool.query("SELECT * FROM messages ORDER BY created_at ASC");
+
+        console.log(test.rows[test.rowCount-1].created_at);
+        if(results.rowCount>0)
+        console.log(results.rows[results.rowCount-1].created_at);
+        
+        // console.log(test.rows[0].created_at)
+        console.log("num new:"+ results.rowCount)
+    return res.status(200).json(results.rows);
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json(err);
+  }
+})
+
 
 // must be logged in to send a message
 app.post("/api/messages/:channelId/send", auth, async (req, res) => {
@@ -737,6 +769,9 @@ app.post("/api/messages/:channelId/send", auth, async (req, res) => {
   }
 
   results = await pool.query('INSERT INTO messages (channel_id, user_id, content, created_at) VALUES($1, $2, $3, NOW()) RETURNING message_id', [channelId, sender, content]);
+  console.log("Sent: " + content);
+  
+
 
   if (results.rowCount === 0) {
     return res.sendStatus(500);
