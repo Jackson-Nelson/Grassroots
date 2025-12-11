@@ -574,7 +574,7 @@ app.get("/api/groups/nearby", async (req, res) => {
 
 // GROUPS PAGE: create new group, requires authentication
 app.post("/api/groups/create", auth, async (req, res) => {
-  const { name, desc, tags } = req.body;
+  const { name, desc, tags, contact_email, contact_phone} = req.body;
   const creator_id = req.user;
 
   console.log("begin group creation: " + name)
@@ -613,7 +613,8 @@ app.post("/api/groups/create", auth, async (req, res) => {
 
 
   //all checks passed, create group
-  result = await pool.query("INSERT INTO groups (name, description, city, state, country, creator_id, created_at) VALUES($1, $2, $3, $4, $5, $6, NOW()) RETURNING group_id", [name, desc, city, state, country, creator_id])
+  result = await pool.query(
+    "INSERT INTO groups (name, description, city, state, country, creator_id, created_at, contact_email, contact_phone) VALUES($1, $2, $3, $4, $5, $6, NOW(), $7, $8) RETURNING group_id", [name, desc, city, state, country, creator_id, contact_email || null, contact_phone || null]);
 
   const group_id = result.rows[0].group_id;
 

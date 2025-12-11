@@ -126,6 +126,8 @@ export default function Groups() {
         name: newGroup.name,
         desc: newGroup.description,
         tags: newGroup.tags,
+        contact_email: newGroup.contact_email,
+        contact_phone: newGroup.contact_phone,
         // creator_id: getAuthToken().uid
       })
     });
@@ -343,6 +345,32 @@ export default function Groups() {
                       rows="4"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Contact Email
+                    </label>
+                    <input
+                      type="email"
+                      value={newGroup.contact_email || ''}
+                      onChange={(e) => setNewGroup({ ...newGroup, contact_email: e.target.value })}
+                      placeholder="group@example.com"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Contact Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={newGroup.contact_phone || ''}
+                      onChange={(e) => setNewGroup({ ...newGroup, contact_phone: e.target.value })}
+                      placeholder="(123) 456-7890"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
                   </div>
 
                   <div>
