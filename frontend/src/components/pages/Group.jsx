@@ -145,13 +145,21 @@ export default function GroupPage() {
   // EDITING THE GROUP PAGE
   const handleSave = async () => {
     try {
+      // Convert tagsInput string to array if it exists
+      const formData = { ...editForm };
+      if (formData.tagsInput !== undefined) {
+        const tagsArray = formData.tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+        formData.tags = tagsArray;
+        delete formData.tagsInput;
+      }
+
       const response = await fetch(`${apiURL}/groups/${groupId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${getAuthToken().JWT}`
         },
-        body: JSON.stringify({...editForm})
+        body: JSON.stringify(formData)
       });
 
       if (!response.ok) {
@@ -163,7 +171,10 @@ export default function GroupPage() {
       
       const updated = await response.json();
       setSelectedGroup(updated);
-      setEditForm(updated);
+      setEditForm({
+        ...updated,
+        tagsInput: (updated.tags || []).join(', ') // convert back to string for editing
+      });
       setIsEditing(false);
     } catch (err) {
       setError(err.message);
@@ -196,7 +207,10 @@ export default function GroupPage() {
 
 
   const handleCancel = () => {
-    setEditForm(selectedGroup);
+    setEditForm({
+      ...selectedGroup,
+      tagsInput: (selectedGroup.tags || []).join(', ') // convert back to string for editing later
+    });
     setIsEditing(false);
   };
 
@@ -205,10 +219,8 @@ export default function GroupPage() {
   };
 
   const handleTagsChange = (e) => {
-    // tags r separated by commas, convert to array
-    const tagsString = e.target.value;
-    const tagsArray = tagsString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
-    setEditForm({ ...editForm, tags: tagsArray });
+    // converts to array when save
+    setEditForm({ ...editForm, tagsInput: e.target.value });
   };
 
 
@@ -246,7 +258,10 @@ export default function GroupPage() {
           ...groupInfo,
           id: groupInfo.group_id
         })
-        setEditForm(groupInfo);
+        setEditForm({
+          ...groupInfo,
+          tagsInput: (groupInfo.tags || []).join(', ')
+        });
 
         setSelectedChannel(groupInfo.channels.find((c) => c.name === 'default') || groupInfo.channels[0]);
 
@@ -543,7 +558,7 @@ export default function GroupPage() {
                     <p className="block text-sm font-medium text-gray-700 mb-2">Tags (comma-separated):</p>
                     <input
                       type="text"
-                      value={(editForm.tags || []).join(', ')}
+                      value={editForm.tagsInput || ''}
                       onChange={handleTagsChange}
                       placeholder="tag1, tag2, tag3"
                       className="w-full border rounded px-3 py-2 text-sm"
