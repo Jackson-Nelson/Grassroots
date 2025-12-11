@@ -26,7 +26,7 @@ const EventCard = ({ event }) => {
   return (
     <div
       onClick={handleClick}
-      className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[18%] mb-2 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+      className="border border-gray-200 rounded-md overflow-hidden w-[250px] flex-shrink-0 mb-2 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
     >
       <div className="relative">
         <img
@@ -120,7 +120,7 @@ const Events = () => {
               </p>
             )}
 
-            <div className="flex flex-wrap gap-5">
+            <div className="flex gap-5 overflow-x-auto pb-2 no-scrollbar">
               {!loading && !error && myEvents.length === 0 && (
                 <p className="text-gray-600">
                   You haven't RSVP'd to any events yet.
@@ -147,7 +147,7 @@ const Events = () => {
               </p>
             )}
 
-            <div className="flex flex-wrap gap-5">
+            <div className="flex gap-5 overflow-x-auto pb-2 no-scrollbar">
               {!loading && !error && groupEvents.length === 0 && (
                 <p className="text-gray-600">
                   No upcoming events from your groups.
