@@ -26,9 +26,8 @@ export const EventCard = ({ event }) => {
   return (
     <div
     onClick={handleClick}
-    className="border border-gray-200 rounded-md overflow-hidden w-full max-w-[250px] mb-2 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-    > 
-    {/* removed md:w-[18%] */}
+    className="border border-gray-200 rounded-md overflow-hidden w-[250px] flex-shrink-0 mb-2 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+    >
       <div className="relative">
         <img
           src={event.image_url || placeholderImg}
@@ -61,7 +60,7 @@ const GroupCard = ({ group }) => {
   return (
     <div
       onClick={handleClick}
-      className="border border-gray-200 rounded-md overflow-hidden w-full md:w-[18%] mb-5 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+      className="border border-gray-200 rounded-md overflow-hidden w-[250px] flex-shrink-0 mb-5 bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow"
     >
       <img
         src={group.avatar_url || placeholderImg}
@@ -246,7 +245,7 @@ const Homepage = () => {
             </p>
           )}
 
-          <div className="flex flex-wrap gap-5">
+          <div className="flex gap-5 overflow-x-auto pb-2 no-scrollbar">
             {!loading && !error && nearbyEvents.length === 0 && (
               <p className="text-gray-600">
                 No upcoming events found.
@@ -272,7 +271,7 @@ const Homepage = () => {
               </p>
             )}
 
-            <div className="flex flex-wrap gap-5">
+            <div className="flex gap-5 overflow-x-auto pb-2 no-scrollbar">
               {!loading && !error && nearbyGroups.length === 0 && (
                 <p className="text-gray-600">
                   No groups found in your area.
