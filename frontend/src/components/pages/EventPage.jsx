@@ -13,6 +13,8 @@ const EventPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isCreator, setIsCreator] = useState(false);
   const [editForm, setEditForm] = useState({});
+  const [hasRsvpd, setHasRsvpd] = useState(false);
+  const [isRsvping, setIsRsvping] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -29,7 +31,12 @@ const EventPage = () => {
 
     const fetchEvent = async () => {
       try {
-        const response = await fetch(`${apiURL}/events/${eventId}`);
+        const headers = {};
+        if (!isLoggedOut()) {
+          headers['Authorization'] = `Bearer ${getAuthToken().JWT}`;
+        }
+
+        const response = await fetch(`${apiURL}/events/${eventId}`, { headers });
         if (!response.ok) throw new Error('Failed to load event');
         
         const data = await response.json();
@@ -38,9 +45,10 @@ const EventPage = () => {
 
         document.title = data.title + ' -- Grassroots'
 
-        // check if user is creator
+        // check if user is creator and has RSVP'd
         if (!isLoggedOut()) {
           setIsCreator(data.creator_id === getAuthToken().user.uid);
+          setHasRsvpd(data.has_rsvpd || false);
         }
       } catch (err) {
         document.title = 'Failed to Load Event -- Grassroots'
@@ -117,6 +125,38 @@ const EventPage = () => {
     }
   };
 
+  const handleRSVP = async () => {
+    if (isLoggedOut()) {
+      setError('Please sign in to RSVP to events');
+      return;
+    }
+
+    setIsRsvping(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${apiURL}/events/${eventId}/rsvp`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${getAuthToken().JWT}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to RSVP' }));
+        throw new Error(errorData.error || 'Failed to RSVP to event');
+      }
+
+      setHasRsvpd(true);
+      setEvent({ ...event, has_rsvpd: true, user_rsvp_status: 'yes' });
+    } catch (err) {
+      setError(err.message);
+      console.error('Error RSVPing to event:', err);
+    } finally {
+      setIsRsvping(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   if (error && !event) return (
     <div className="flex flex-col justify-center items-center min-h-screen">
@@ -164,12 +204,31 @@ const EventPage = () => {
               </p>
             </div>
             
-            {/* edit button */}
-            {isCreator && !isEditing && (
-              <button onClick={() => { setIsEditing(true); setError(null); }} className="px-4 py-2 bg-green-700 text-white rounded">
-                Edit Event
-              </button>
-            )}
+            {/* edit button and RSVP button */}
+            <div className="flex gap-2">
+              {!isEditing && !hasRsvpd && !isLoggedOut() && (
+                <button 
+                  onClick={handleRSVP} 
+                  disabled={isRsvping}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isRsvping ? 'RSVPing...' : 'RSVP'}
+                </button>
+              )}
+              {!isEditing && hasRsvpd && (
+                <button 
+                  disabled
+                  className="px-4 py-2 bg-gray-400 text-white rounded cursor-not-allowed"
+                >
+                  ✓ RSVP'd
+                </button>
+              )}
+              {isCreator && !isEditing && (
+                <button onClick={() => { setIsEditing(true); setError(null); }} className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800">
+                  Edit Event
+                </button>
+              )}
+            </div>
           </div>
 
           {/* date & time */}
@@ -218,6 +277,12 @@ const EventPage = () => {
               {editForm.image_url && !error && (
                 <p className="text-sm text-green-600 mb-4">✓ Image selected. Click Save to update.</p>
               )}
+            </div>
+          )}
+
+          {error && !isEditing && (
+            <div className="mt-4">
+              <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
 
