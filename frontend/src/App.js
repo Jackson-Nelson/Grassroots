@@ -10,6 +10,8 @@ import Sidebar from './components/Sidebar.jsx'
 import GroupPage from "./components/pages/Group.jsx";
 import AboutUs from "./components/pages/AboutUs.jsx";
 import Events from "./components/pages/Events.jsx";
+import NearbyEvents from "./components/pages/NearbyEvents.jsx";
+import NearbyGroups from "./components/pages/NearbyGroups.jsx";
 
 
 // many things will need to pass this auth token when they try to get any info about a user, keep logged in, etc.
@@ -51,6 +53,8 @@ function App() {
               <Route path="/groups/:groupId" element={< GroupPage />} />
               <Route path="/about-us" element={< AboutUs />} />
               <Route path="/events" element={<Events />} />
+              <Route path="/events/nearby" element={<NearbyEvents />} />
+              <Route path="/groups/nearby" element={<NearbyGroups />} />
             </Routes>
           </div>
         </Sidebar>

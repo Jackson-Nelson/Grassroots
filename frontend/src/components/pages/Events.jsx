@@ -110,7 +110,7 @@ const Events = () => {
         {!isLoggedOut() && (
           <section className="mb-6">
             <h2 className="text-xl font-semibold text-green-700 mb-3">
-              Events RSVP'd To →
+              Events RSVP'd To
             </h2>
 
             {loading && <p className="text-gray-700">Loading events...</p>}
@@ -137,7 +137,7 @@ const Events = () => {
         {!isLoggedOut() && (
           <section className="mb-6">
             <h2 className="text-xl font-semibold text-green-700 mb-3">
-              My Group Events →
+              My Group Events
             </h2>
 
             {loading && <p className="text-gray-700">Loading events...</p>}
