@@ -492,7 +492,7 @@ app.put("/api/groups/:groupId", auth, async (req, res) => {
   try {
     const { groupId } = req.params;
     const userId = req.user;
-    const { name, description, contact_email, contact_phone, tags } = req.body;
+    const { name, description, contact_email, contact_phone, tags, avatar_url } = req.body;
 
     // check group exists and user is the creator
     const groupResult = await pool.query(
@@ -528,6 +528,10 @@ app.put("/api/groups/:groupId", auth, async (req, res) => {
     if (contact_phone !== undefined) {
       updates.push(`contact_phone = $${paramIndex++}`);
       values.push(contact_phone || null);
+    }
+    if (avatar_url !== undefined && avatar_url !== null && avatar_url !== '') {
+      updates.push(`avatar_url = $${paramIndex++}`);
+      values.push(avatar_url);
     }
 
     if (updates.length > 0) {

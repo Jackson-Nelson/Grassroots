@@ -7,7 +7,7 @@ import { SideBarItemsContext } from '../Sidebar';
 import { EventCard } from './Homepage';
 import PollsPane from './Polls';
 
-
+const placeholderImg = "https://picsum.photos/800/400";
 
 
 
@@ -170,6 +170,30 @@ export default function GroupPage() {
       console.error('Error updating group:', err);
     }
   };
+
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+
+      // validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file');
+        return;
+      }
+
+      // convert to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditForm({ ...editForm, avatar_url: reader.result });
+      };
+      reader.onerror = () => {
+        setError('Failed to read image file');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
 
   const handleCancel = () => {
     setEditForm(selectedGroup);
@@ -406,16 +430,16 @@ export default function GroupPage() {
   const isMember = iAmMember;
 
   return (
-    <div className="min-h-[100vh] bg-gray-50 px-8" onClick={() => setShowingPane('')}>
+    <div className="min-h-[100vh] bg-gray-50" onClick={() => setShowingPane('')}>
 
       {showingPane === 'events' && <EventsPane />}
       {showingPane === 'channels' && <ChannelsPane />}
       {showingPane === 'polls' && <PollsPane groupId={selectedGroup.id} />}
 
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto px-8 py-4">
 
         {/* Back to Groups Button and Edit Group Button */}
-        <div className="flex justify-between items-center mb-4 mt-2">
+        <div className="flex justify-between items-center mb-4">
           <button
             onClick={goBack}
             className="text-green-600 hover:text-green-800 font-medium flex items-center gap-2"
@@ -437,12 +461,19 @@ export default function GroupPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Group Info Sidebar */}
           <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg p-6 shadow-md">
-                <div className="mb-6">
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                {/* Group Image */}
+                <img 
+                  src={isEditing && editForm.avatar_url ? editForm.avatar_url : (selectedGroup.avatar_url || placeholderImg)} 
+                  alt={selectedGroup.name}
+                  className="w-full h-48 object-cover" 
+                />
+                
+                <div className="p-6">
+                  <div className="mb-6">
                   {/* Group Name */}
                   <div className="flex justify-between items-start mb-2">
                     <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                      <Users className="w-7 h-7 text-green-600" />
                       {isEditing ? (
                         <input
                           name="name"
@@ -504,7 +535,7 @@ export default function GroupPage() {
                       </div>
                     )
                   )}
-                </div>
+                  </div>
                 
                 {/* Tags section */}
                 {isEditing ? (
@@ -531,6 +562,25 @@ export default function GroupPage() {
                       </div>
                     </div>
                   )
+                )}
+
+                {/* edit image */}
+                {isEditing && (
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-semibold mb-2">Group Image:</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="w-full border rounded px-3 py-2 mb-2"
+                    />
+                    {error && (
+                      <p className="text-sm text-red-600 mb-2">{error}</p>
+                    )}
+                    {editForm.avatar_url && !error && (
+                      <p className="text-sm text-green-600 mb-4">✓ Image selected. Click Save to update.</p>
+                    )}
+                  </div>
                 )}
 
                 {/* Save and Cancel Buttons */}
@@ -610,8 +660,9 @@ export default function GroupPage() {
                     </button>
                   </div>
               }
+                </div>
+              </div>
             </div>
-          </div>
 
           {/* Chat Area */}
           <div className="lg:col-span-2">

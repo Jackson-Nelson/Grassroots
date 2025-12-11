@@ -34,7 +34,7 @@ CREATE TABLE groups (
     zip INTEGER,
     country VARCHAR(255) NOT NULL,
     creator_id uuid NOT NULL,
-    avatar_url VARCHAR(500),
+    avatar_url TEXT,
     is_private BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
