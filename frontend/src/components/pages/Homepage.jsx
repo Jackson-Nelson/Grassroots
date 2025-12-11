@@ -51,7 +51,7 @@ export const EventCard = ({ event }) => {
   );
 };
 
-const GroupCard = ({ group }) => {
+export const GroupCard = ({ group }) => {
   const navigate = useNavigate();
   const handleClick = () => {
     navigate(`/groups/${group.group_id}`);
@@ -92,6 +92,9 @@ const Homepage = () => {
   const [error, setError] = useState(null);
 
   const [hasUserLoc, setUserLoc] = useState(false);
+
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     document.title = 'Home -- Grassroots'
@@ -234,9 +237,19 @@ const Homepage = () => {
 
         {/* EVENTS NEAR ME SECTION */}
         <section className="mb-6">
-          <h2 className="text-xl font-semibold text-green-700 mb-5">
-            Events Near Me →
-          </h2>
+          <div className="flex justify-between items-center mb-5">
+            <h2 className="text-xl font-semibold text-green-700">
+              Events Near Me
+            </h2>
+            {nearbyEvents.length > 0 && (
+              <button
+                onClick={() => navigate('/events/nearby')}
+                className="text-green-700 hover:text-green-800 hover:underline font-medium"
+              >
+                See More →
+              </button>
+            )}
+          </div>
 
           {loading && <p className="text-gray-700">Loading events...</p>}
           {error && (
@@ -260,9 +273,19 @@ const Homepage = () => {
         {/* GROUPS NEAR ME SECTION */}
          
           <section className="mb-6">
-            <h2 className="text-xl font-semibold text-green-700 mb-5">
-              Groups Near Me →
-            </h2>
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-xl font-semibold text-green-700">
+                Groups Near Me
+              </h2>
+              {nearbyGroups.length > 0 && (
+                <button
+                  onClick={() => navigate('/groups/nearby')}
+                  className="text-green-700 hover:text-green-800 hover:underline font-medium"
+                >
+                  See More →
+                </button>
+              )}
+            </div>
 
             {loading && <p className="text-gray-700">Loading groups...</p>}
             {error && (
