@@ -485,6 +485,92 @@ const getGroupData = async (gid) => {
 // GROUP ROUTES //
 
 // INDIVIDUAL GROUP PAGES
+
+
+// UPDATE GROUP: update group info (requires auth, only creator can update)
+app.put("/api/groups/:groupId", auth, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const userId = req.user;
+    const { name, description, contact_email, contact_phone, tags } = req.body;
+
+    // check group exists and user is the creator
+    const groupResult = await pool.query(
+      'SELECT creator_id FROM groups WHERE group_id = $1',
+      [groupId]
+    );
+
+    if (groupResult.rowCount === 0) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    if (groupResult.rows[0].creator_id !== userId) {
+      return res.status(403).json({ error: 'Only the group creator can update this group' });
+    }
+
+    // update query
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (name !== undefined) {
+      updates.push(`name = $${paramIndex++}`);
+      values.push(name);
+    }
+    if (description !== undefined) {
+      updates.push(`description = $${paramIndex++}`);
+      values.push(description);
+    }
+    if (contact_email !== undefined) {
+      updates.push(`contact_email = $${paramIndex++}`);
+      values.push(contact_email || null);
+    }
+    if (contact_phone !== undefined) {
+      updates.push(`contact_phone = $${paramIndex++}`);
+      values.push(contact_phone || null);
+    }
+
+    if (updates.length > 0) {
+      updates.push(`updated_at = NOW()`);
+      values.push(groupId);
+      
+      await pool.query(
+        `UPDATE groups SET ${updates.join(', ')} WHERE group_id = $${paramIndex}`,
+        values
+      );
+    }
+
+    // update tags
+    if (tags !== undefined && Array.isArray(tags)) {
+      // delete existing tags?? don't know if i should keep this every edit but there should be a way to delete tags too.
+      await pool.query('DELETE FROM tags WHERE gid = $1', [groupId]);
+      
+      // insert new tags
+      for (const tag of tags) {
+        if (tag && tag.trim()) {
+          await pool.query('INSERT INTO tags (gid, tag) VALUES ($1, $2)', [groupId, tag.trim()]);
+        }
+      }
+    }
+
+    // fetch updated group
+    const updatedGroup = await getGroupData(groupId);
+    
+    if (!updatedGroup) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    res.json(updatedGroup);
+
+  } catch (err) {
+    console.error('Error updating group:', err);
+    res.status(500).json({ error: 'Failed to update group', details: err.message });
+  }
+});
+
+
+
+
 app.get("/api/group/:groupId", async (req, res) => { // successful response is a group with all db fields + tags + members
   const groupId = req.params.groupId;
   console.log("serving group: " + groupId);
