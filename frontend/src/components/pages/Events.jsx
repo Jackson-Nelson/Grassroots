@@ -4,6 +4,15 @@ import { apiURL, getAuthToken, isLoggedOut } from '../../App';
 
 const placeholderImg = "https://picsum.photos/400/300";
 
+// sorts events chronologically for viewing purposes
+const sortEventsChronologically = (events) => {
+  return [...events].sort((a, b) => {
+    const dateA = new Date(a.event_date);
+    const dateB = new Date(b.event_date);
+    console.log('Comparing:', dateA, 'vs', dateB, '=', dateA - dateB);
+    return dateA - dateB;
+  });
+};
 
 const EventCard = ({ event }) => {
   const navigate = useNavigate();
@@ -86,7 +95,8 @@ const Events = () => {
             const groupEventsRes = await fetch(groupEventsReq);
             if (groupEventsRes.ok) {
               const groupEventsData = await groupEventsRes.json();
-              setGroupEvents(groupEventsData);
+              const sortedGroupEvents = sortEventsChronologically(groupEventsData);
+              setGroupEvents(sortedGroupEvents);
             }
           }
 

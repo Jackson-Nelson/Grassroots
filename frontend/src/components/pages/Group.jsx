@@ -23,6 +23,10 @@ export default function GroupPage() {
   const messagesEndRef = useRef(null);
   const [showingPane, setShowingPane] = useState('');
   const [sidebarButtonPressed, setSidebarPressed] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [isCreator, setIsCreator] = useState(false);
+  const [editForm, setEditForm] = useState({});
+  const [error, setError] = useState(null);
   const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
   const [newChannel, setNewChannel] = useState({ name: '' });
 
@@ -174,7 +178,6 @@ const createChannel = async () => {
       { icon: Hash, label: "Channels", onClick: (() => setSidebarPressed('channels')) },
       { icon: CalendarDays, label: "Group Events", onClick: (() => setSidebarPressed('events')) },
       { icon: BarChart3, label: "Polls", onClick: (() => setSidebarPressed('polls')) },
-      { icon: FolderOpen, label: "Resources", path: "/resources" },
     ]
 
     addSidebarCluster({ groupLabel: selectedGroup.name, menuItems: GROUPS_PAGE_ITEMS })
@@ -182,6 +185,53 @@ const createChannel = async () => {
     // return () =>{ removeSidebarCluster(selectedGroup.name);console.log("RAN CLEANUP");}
 
   }, [selectedGroup]);
+
+  // EDITING THE GROUP PAGE
+  const handleSave = async () => {
+    try {
+      const response = await fetch(`${apiURL}/groups/${groupId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken().JWT}`
+        },
+        body: JSON.stringify({...editForm})
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to update group' }));
+        const errorMessage = errorData.details || errorData.error || `Failed to update group (${response.status})`;
+        console.error('Backend error response:', errorData);
+        throw new Error(errorMessage);
+      }
+      
+      const updated = await response.json();
+      setSelectedGroup(updated);
+      setEditForm(updated);
+      setIsEditing(false);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error updating group:', err);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditForm(selectedGroup);
+    setIsEditing(false);
+  };
+
+  const handleChange = (e) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+  const handleTagsChange = (e) => {
+    // tags r separated by commas, convert to array
+    const tagsString = e.target.value;
+    const tagsArray = tagsString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+    setEditForm({ ...editForm, tags: tagsArray });
+  };
+
+
 
 
   // get group info when you go to group's page
@@ -216,10 +266,16 @@ const createChannel = async () => {
           ...groupInfo,
           id: groupInfo.group_id
         })
+        setEditForm(groupInfo);
 
         setSelectedChannel(groupInfo.channels.find((c) => c.name === 'default') || groupInfo.channels[0]);
 
         setIAmMember(!isLoggedOut() && groupInfo.members.find((memb) => memb.user_id === getAuthToken().user.uid))
+        
+        // Check if user is creator
+        if (!isLoggedOut()) {
+          setIsCreator(groupInfo.creator_id === getAuthToken().user.uid);
+        }
 
       } catch (err) {
         console.error("Error fetching group info: " + err);
@@ -401,54 +457,155 @@ const createChannel = async () => {
       {showingPane === 'polls' && <PollsPane groupId={selectedGroup.id} />}
 
       <div className="max-w-6xl mx-auto">
-        <button
-          onClick={goBack}
-          className="mb-6 text-green-600 hover:text-green-800 font-medium flex items-center gap-2"
-        >
-          ← Back to Groups
-        </button>
+
+        {/* Back to Groups Button and Edit Group Button */}
+        <div className="flex justify-between items-center mb-4 mt-2">
+          <button
+            onClick={goBack}
+            className="text-green-600 hover:text-green-800 font-medium flex items-center gap-2"
+          >
+            ← Back to Groups
+          </button>
+
+          {/* Edit Group Button */}
+          {isCreator && !isEditing && (
+            <button 
+              onClick={() => { setIsEditing(true); setError(null); }} 
+              className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 text-sm"
+            >
+              Edit Group
+            </button>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Group Info Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg p-6 shadow-md">
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                  <Users className="w-7 h-7 text-green-600" />
-                  {selectedGroup.name}
-                </h1>
-                <p className="text-gray-600 text-sm">{selectedGroup.description}</p>
-              </div>
-
-              {selectedGroup.tags && selectedGroup.tags.length > 0 && (
+              <div className="bg-white rounded-lg p-6 shadow-md">
                 <div className="mb-6">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Tags:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedGroup.tags.map((tag, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium">
-                        {tag}
-                      </span>
-                    ))}
+                  {/* Group Name */}
+                  <div className="flex justify-between items-start mb-2">
+                    <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                      <Users className="w-7 h-7 text-green-600" />
+                      {isEditing ? (
+                        <input
+                          name="name"
+                          value={editForm.name || ''}
+                          onChange={handleChange}
+                          className="text-2xl font-bold text-gray-800 border rounded px-3 py-1"
+                        />
+                      ) : (
+                        selectedGroup.name
+                      )}
+                    </h1>
                   </div>
-                </div>
-              )}
-
-              {selectedGroup.members.length > 0 && (
-                <div className="mb-6">
-                  <p className="text-sm font-medium text-gray-700 mb-3">
-                    Members ({selectedGroup.members.length}):
-                  </p>
-                  <div className="space-y-2">
-                    {selectedGroup.members.map((member, idx) => (
-                      <div key={idx} className="px-3 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        {member.username}
+                  
+                  {/* Group Description */}
+                  {isEditing ? (
+                    <textarea
+                      name="description"
+                      rows="10"
+                      placeholder="Group description"
+                      value={editForm.description || ''}
+                      onChange={handleChange}
+                      className="w-full border rounded px-3 py-2 mb-3 text-sm"
+                    />
+                  ) : (
+                    <p className="text-gray-600 text-sm mb-3">{selectedGroup.description}</p>
+                  )}
+                  
+                  {/* Contact Us section */}
+                  {isEditing ? (
+                    <div className="mb-4 space-y-2">
+                      <p className="text-sm font-medium text-gray-700">Contact Information:</p>
+                      <input
+                        type="email"
+                        name="contact_email"
+                        value={editForm.contact_email || ''}
+                        onChange={handleChange}
+                        placeholder="Contact Email"
+                        className="w-full border rounded px-3 py-1 text-sm"
+                      />
+                      <input
+                        type="tel"
+                        name="contact_phone"
+                        value={editForm.contact_phone || ''}
+                        onChange={handleChange}
+                        placeholder="Contact Phone"
+                        className="w-full border rounded px-3 py-1 text-sm"
+                      />
+                    </div>
+                  ) : (
+                    (selectedGroup.contact_email || selectedGroup.contact_phone) && (
+                      <div className="mb-4">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Contact Us</p>
+                        {selectedGroup.contact_email && (
+                          <p className="text-sm text-gray-600">{selectedGroup.contact_email}</p>
+                        )}
+                        {selectedGroup.contact_phone && (
+                          <p className="text-sm text-gray-600">{selectedGroup.contact_phone}</p>
+                        )}
                       </div>
-                    ))}
-                  </div>
+                    )
+                  )}
                 </div>
-              )}
+                
+                {/* Tags section */}
+                {isEditing ? (
+                  <div className="mb-6">
+                    <p className="block text-sm font-medium text-gray-700 mb-2">Tags (comma-separated):</p>
+                    <input
+                      type="text"
+                      value={(editForm.tags || []).join(', ')}
+                      onChange={handleTagsChange}
+                      placeholder="tag1, tag2, tag3"
+                      className="w-full border rounded px-3 py-2 text-sm"
+                    />
+                  </div>
+                ) : (
+                  selectedGroup.tags && selectedGroup.tags.length > 0 && (
+                    <div className="mb-6">
+                      <p className="text-sm font-medium text-gray-700 mb-2">Tags:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedGroup.tags.map((tag, idx) => (
+                          <span key={idx} className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                )}
 
+                {/* Save and Cancel Buttons */}
+                {isEditing && (
+                  <div className="flex gap-3 mb-6">
+                    <button onClick={handleSave} className="px-6 py-2 bg-green-700 text-white rounded hover:bg-green-800">
+                      Save
+                    </button>
+                    <button onClick={handleCancel} className="px-6 py-2 bg-gray-300 rounded hover:bg-gray-400">
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              
+                {/* Members */}
+                {selectedGroup.members.length > 0 && (
+                  <div className="mb-6">
+                    <p className="text-sm font-medium text-gray-700 mb-3">
+                      Members ({selectedGroup.members.length}):
+                    </p>
+                    <div className="space-y-2">
+                      {selectedGroup.members.map((member, idx) => (
+                        <div key={idx} className="px-3 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          {member.username}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              
               {isLoggedOut() ?
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Sign in to join groups!
