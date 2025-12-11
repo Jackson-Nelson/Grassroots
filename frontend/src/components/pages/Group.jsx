@@ -23,10 +23,52 @@ export default function GroupPage() {
   const messagesEndRef = useRef(null);
   const [showingPane, setShowingPane] = useState('');
   const [sidebarButtonPressed, setSidebarPressed] = useState('');
+  const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
+  const [newChannel, setNewChannel] = useState({ name: '' });
 
   const groupId = useParams().groupId;
 
   const { addSidebarCluster, removeSidebarCluster } = useContext(SideBarItemsContext);
+
+const createChannel = async () => {
+  if (!newChannel.name.trim()) {
+    return;
+  }
+
+  const request = new Request(`${apiURL}/groups/${selectedGroup.id}/channels/create`, {
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + getAuthToken().JWT
+    },
+    body: JSON.stringify({
+      name: newChannel.name.trim(),
+    })
+  });
+
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error creating channel:', errorText);
+      alert('Failed to create channel: ' + errorText);
+      return;
+    }
+
+    const newChannelData = await response.json();
+    setSelectedGroup({
+      ...selectedGroup,
+      channels: [...selectedGroup.channels, newChannelData]
+    });
+
+    setNewChannel({ name: '' });
+    setShowCreateChannelModal(false);
+  } catch (err) {
+    console.error('Error creating channel:', err);
+    alert('Failed to create channel. Please try again.');
+  }
+};
+
 
   const EventsPane = () => {
     return (
@@ -80,7 +122,7 @@ export default function GroupPage() {
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                         /> */}
               <button
-                onClick={() => { }}
+                onClick={() => setShowCreateChannelModal(true)}
                 className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
                 >
                 <Plus className="w-4 h-4" />
@@ -106,6 +148,8 @@ export default function GroupPage() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  
 
 
   useEffect(() => {
@@ -367,57 +411,44 @@ export default function GroupPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Group Info Sidebar */}
           <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg p-6 shadow-md">
+            <div className="bg-white rounded-lg p-6 shadow-md">
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+                  <Users className="w-7 h-7 text-green-600" />
+                  {selectedGroup.name}
+                </h1>
+                <p className="text-gray-600 text-sm">{selectedGroup.description}</p>
+              </div>
+
+              {selectedGroup.tags && selectedGroup.tags.length > 0 && (
                 <div className="mb-6">
-                  <h1 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                    <Users className="w-7 h-7 text-green-600" />
-                    {selectedGroup.name}
-                  </h1>
-                  <p className="text-gray-600 text-sm mb-3">{selectedGroup.description}</p>
-                  
-                  {/* Contact Us section - added right under description */}
-                  {selectedGroup.contact_email || selectedGroup.contact_phone ? (
-                    <div className="mb-4">
-                      <p className="text-sm font-medium text-gray-700 mb-1">Contact Us</p>
-                      {selectedGroup.contact_email && (
-                        <p className="text-sm text-gray-600">{selectedGroup.contact_email}</p>
-                      )}
-                      {selectedGroup.contact_phone && (
-                        <p className="text-sm text-gray-600">{selectedGroup.contact_phone}</p>
-                      )}
-                    </div>
-                  ) : null}
+                  <p className="text-sm font-medium text-gray-700 mb-2">Tags:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedGroup.tags.map((tag, idx) => (
+                      <span key={idx} className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                
-                {selectedGroup.tags && selectedGroup.tags.length > 0 && (
-                  <div className="mb-6">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Tags:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedGroup.tags.map((tag, idx) => (
-                        <span key={idx} className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
+              )}
+
+              {selectedGroup.members.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-sm font-medium text-gray-700 mb-3">
+                    Members ({selectedGroup.members.length}):
+                  </p>
+                  <div className="space-y-2">
+                    {selectedGroup.members.map((member, idx) => (
+                      <div key={idx} className="px-3 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        {member.username}
+                      </div>
+                    ))}
                   </div>
-                )}
-              
-                {selectedGroup.members.length > 0 && (
-                  <div className="mb-6">
-                    <p className="text-sm font-medium text-gray-700 mb-3">
-                      Members ({selectedGroup.members.length}):
-                    </p>
-                    <div className="space-y-2">
-                      {selectedGroup.members.map((member, idx) => (
-                        <div key={idx} className="px-3 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          {member.username}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              
+                </div>
+              )}
+
               {isLoggedOut() ?
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Sign in to join groups!
@@ -540,10 +571,60 @@ export default function GroupPage() {
                   </p>
                 </div>
               )}
+
+              {showCreateChannelModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg max-w-md w-full p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold text-gray-800">Create New Channel</h2>
+                    <button
+                      onClick={() => setShowCreateChannelModal(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                          
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Channel Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={newChannel.name}
+                        onChange={(e) => setNewChannel({ ...newChannel, name: e.target.value })}
+                        onKeyPress={(e) => e.key === 'Enter' && newChannel.name.trim() && createChannel()}
+                        placeholder="Enter channel name..."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                          
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        onClick={() => setShowCreateChannelModal(false)}
+                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={createChannel}
+                        disabled={!newChannel.name.trim()}
+                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Create
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             </div>
           </div>
         </div>
       </div>
     </div>
+    
   );
 }

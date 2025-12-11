@@ -215,10 +215,9 @@ app.get("/api/events/my-group-events", auth, async (req, res) => {
 });
 
 // EVENT PAGES: fetching individual event info
-app.get("/api/events/:eventId", auth, async (req, res) => {
+app.get("/api/events/:eventId", async (req, res) => {
   try {
     const { eventId } = req.params;
-    const userId = req.user;
 
     // get event
     const eventResult = await pool.query(
@@ -236,75 +235,11 @@ app.get("/api/events/:eventId", auth, async (req, res) => {
     }
 
     const event = eventResult.rows[0];
-
-    // check if user has rsvp'd
-    if (userId) {
-      const rsvpResult = await pool.query(
-        `SELECT rsvp_status FROM event_attendees 
-         WHERE event_id = $1 AND user_id = $2`,
-        [eventId, userId]
-      );
-      
-      if (rsvpResult.rowCount > 0) {
-        event.user_rsvp_status = rsvpResult.rows[0].rsvp_status;
-        event.has_rsvpd = true;
-      } else {
-        event.user_rsvp_status = null;
-        event.has_rsvpd = false;
-      }
-    } else {
-      event.user_rsvp_status = null;
-      event.has_rsvpd = false;
-    }
-
     res.json(event);
 
   } catch (err) {
     console.error('Error fetching event:', err);
     res.status(500).json({ error: 'Failed to fetch event', details: err.message });
-  }
-});
-
-// EVENT PAGES: RSVP to an event
-app.post("/api/events/:eventId/rsvp", auth, async (req, res) => {
-  try {
-    const { eventId } = req.params;
-    const userId = req.user;
-
-    // Check if event exists
-    const eventResult = await pool.query(
-      'SELECT event_id FROM events WHERE event_id = $1',
-      [eventId]
-    );
-
-    if (eventResult.rowCount === 0) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
-    // Check if user already RSVP'd
-    const existingRsvp = await pool.query(
-      `SELECT rsvp_status FROM event_attendees 
-       WHERE event_id = $1 AND user_id = $2`,
-      [eventId, userId]
-    );
-
-    if (existingRsvp.rowCount > 0) {
-      return res.status(400).json({ error: 'You have already RSVP\'d to this event' });
-    }
-
-    // Insert RSVP with status 'yes'
-    await pool.query(
-      `INSERT INTO event_attendees (event_id, user_id, rsvp_status, rsvp_date)
-       VALUES ($1, $2, 'yes', NOW())
-       ON CONFLICT (event_id, user_id) DO NOTHING`,
-      [eventId, userId]
-    );
-
-    res.status(201).json({ message: 'Successfully RSVP\'d to event', rsvp_status: 'yes' });
-
-  } catch (err) {
-    console.error('Error RSVPing to event:', err);
-    res.status(500).json({ error: 'Failed to RSVP to event', details: err.message });
   }
 });
 
@@ -639,7 +574,7 @@ app.get("/api/groups/nearby", async (req, res) => {
 
 // GROUPS PAGE: create new group, requires authentication
 app.post("/api/groups/create", auth, async (req, res) => {
-  const { name, desc, tags, contact_email, contact_phone} = req.body;
+  const { name, desc, tags } = req.body;
   const creator_id = req.user;
 
   console.log("begin group creation: " + name)
@@ -678,8 +613,7 @@ app.post("/api/groups/create", auth, async (req, res) => {
 
 
   //all checks passed, create group
-  result = await pool.query(
-    "INSERT INTO groups (name, description, city, state, country, creator_id, created_at, contact_email, contact_phone) VALUES($1, $2, $3, $4, $5, $6, NOW(), $7, $8) RETURNING group_id", [name, desc, city, state, country, creator_id, contact_email || null, contact_phone || null]);
+  result = await pool.query("INSERT INTO groups (name, description, city, state, country, creator_id, created_at) VALUES($1, $2, $3, $4, $5, $6, NOW()) RETURNING group_id", [name, desc, city, state, country, creator_id])
 
   const group_id = result.rows[0].group_id;
 
@@ -1061,6 +995,55 @@ app.get("/api/polls/:pollId/results", async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch results', details: err.message });
   }
 });
+
+// CHANNEL MODAL
+app.post("/api/groups/:groupId/channels/create", auth, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { name } = req.body;
+    const userId = req.user;
+
+    // Validate input
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Channel name is required' });
+    }
+
+    if (name.trim().length < 2) {
+      return res.status(400).json({ error: 'Channel name must be at least 2 characters' });
+    }
+
+    if (name.trim().length > 50) {
+      return res.status(400).json({ error: 'Channel name must be 50 characters or less' });
+    }
+
+
+    // Check if channel name already exists in this group
+    const channelCheck = await pool.query(
+      'SELECT channel_id FROM channels WHERE group_id = $1 AND LOWER(name) = LOWER($2)',
+      [groupId, name.trim()]
+    );
+
+    if (channelCheck.rowCount > 0) {
+      return res.status(400).json({ error: 'A channel with this name already exists' });
+    }
+    
+    const result = await pool.query(
+      `INSERT INTO channels (group_id, name)
+       VALUES ($1, $2)
+       RETURNING channel_id, name, group_id`,
+      [groupId, name.trim()]
+    );
+
+    const newChannel = result.rows[0];
+
+    res.status(201).json(newChannel);
+
+  } catch (err) {
+    console.error('Error creating channel:', err);
+    res.status(500).json({ error: 'Failed to create channel', details: err.message });
+  }
+});
+
 
 
 app.listen(process.env.PORT, () => console.log("Server listening on localhost:" + process.env.PORT))
