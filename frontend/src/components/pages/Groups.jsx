@@ -252,13 +252,13 @@ export default function Groups() {
             <p className="text-xl text-green-600">The best way to get politically active in your community</p>
           </div>
 
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="fixed top-8 right-8 bg-green-600 text-white px-6 py-3 rounded-full hover:bg-green-700 transition-all flex items-center gap-2 font-medium shadow-lg"
-          >
-            <Plus className="w-5 h-5" />
-            Create Group
-          </button>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="fixed top-20 right-8 bg-green-600 text-white px-6 py-3 rounded-full hover:bg-green-700 transition-all flex items-center gap-2 font-medium shadow-lg"
+        >
+          <Plus className="w-5 h-5" />
+          Create Group
+        </button>
 
           {groups.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-lg shadow-md">
