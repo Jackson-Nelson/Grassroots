@@ -27,10 +27,52 @@ export default function GroupPage() {
   const [isCreator, setIsCreator] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [error, setError] = useState(null);
+  const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
+  const [newChannel, setNewChannel] = useState({ name: '' });
 
   const groupId = useParams().groupId;
 
   const { addSidebarCluster, removeSidebarCluster } = useContext(SideBarItemsContext);
+
+const createChannel = async () => {
+  if (!newChannel.name.trim()) {
+    return;
+  }
+
+  const request = new Request(`${apiURL}/groups/${selectedGroup.id}/channels/create`, {
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + getAuthToken().JWT
+    },
+    body: JSON.stringify({
+      name: newChannel.name.trim(),
+    })
+  });
+
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error creating channel:', errorText);
+      alert('Failed to create channel: ' + errorText);
+      return;
+    }
+
+    const newChannelData = await response.json();
+    setSelectedGroup({
+      ...selectedGroup,
+      channels: [...selectedGroup.channels, newChannelData]
+    });
+
+    setNewChannel({ name: '' });
+    setShowCreateChannelModal(false);
+  } catch (err) {
+    console.error('Error creating channel:', err);
+    alert('Failed to create channel. Please try again.');
+  }
+};
+
 
   const EventsPane = () => {
     return (
@@ -84,7 +126,7 @@ export default function GroupPage() {
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                         /> */}
               <button
-                onClick={() => { }}
+                onClick={() => setShowCreateChannelModal(true)}
                 className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
                 >
                 <Plus className="w-4 h-4" />
@@ -110,6 +152,8 @@ export default function GroupPage() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  
 
 
   useEffect(() => {
@@ -750,10 +794,60 @@ export default function GroupPage() {
                   </p>
                 </div>
               )}
+
+              {showCreateChannelModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg max-w-md w-full p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold text-gray-800">Create New Channel</h2>
+                    <button
+                      onClick={() => setShowCreateChannelModal(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                          
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Channel Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={newChannel.name}
+                        onChange={(e) => setNewChannel({ ...newChannel, name: e.target.value })}
+                        onKeyPress={(e) => e.key === 'Enter' && newChannel.name.trim() && createChannel()}
+                        placeholder="Enter channel name..."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                          
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        onClick={() => setShowCreateChannelModal(false)}
+                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={createChannel}
+                        disabled={!newChannel.name.trim()}
+                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Create
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             </div>
           </div>
         </div>
       </div>
     </div>
+    
   );
 }
