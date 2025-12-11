@@ -243,6 +243,49 @@ app.get("/api/events/:eventId", async (req, res) => {
   }
 });
 
+// EVENT PAGES: RSVP to an event
+app.post("/api/events/:eventId/rsvp", auth, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const userId = req.user;
+
+    // check if event exists
+    const eventResult = await pool.query(
+      'SELECT event_id FROM events WHERE event_id = $1',
+      [eventId]
+    );
+
+    if (eventResult.rowCount === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // 
+    const existingRsvp = await pool.query(
+      `SELECT rsvp_status FROM event_attendees 
+       WHERE event_id = $1 AND user_id = $2`,
+      [eventId, userId]
+    );
+
+    if (existingRsvp.rowCount > 0) {
+      return res.status(400).json({ error: 'You have already RSVP\'d to this event' });
+    }
+
+    // Insert RSVP with status 'yes'
+    await pool.query(
+      `INSERT INTO event_attendees (event_id, user_id, rsvp_status, rsvp_date)
+       VALUES ($1, $2, 'yes', NOW())
+       ON CONFLICT (event_id, user_id) DO NOTHING`,
+      [eventId, userId]
+    );
+
+    res.status(201).json({ message: 'Successfully RSVP\'d to event', rsvp_status: 'yes' });
+
+  } catch (err) {
+    console.error('Error RSVPing to event:', err);
+    res.status(500).json({ error: 'Failed to RSVP to event', details: err.message });
+  }
+});
+
 // EVENT PAGES: update an event (requires auth, only creator can update)
 app.put("/api/events/:eventId", auth, async (req, res) => {
   try {
