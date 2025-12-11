@@ -5,6 +5,16 @@ import getLocale from '../../utils/getcoords';
 
 const placeholderImg = "https://picsum.photos/400/300";
 
+// sorts events chronologically for viewing purposes
+const sortEventsChronologically = (events) => {
+  return [...events].sort((a, b) => {
+    const dateA = new Date(a.event_date);
+    const dateB = new Date(b.event_date);
+    console.log('Comparing:', dateA, 'vs', dateB, '=', dateA - dateB);
+    return dateA - dateB;
+  });
+};
+
 export const EventCard = ({ event }) => {
   const navigate = useNavigate();
 
@@ -155,7 +165,8 @@ const Homepage = () => {
           throw new Error(`Failed to fetch events: ${eventsRes.status} ${errorText}`);
         }
         const eventsData = await eventsRes.json();
-        setNearbyEvents(eventsData);
+        const sortedEvents = sortEventsChronologically(eventsData);
+        setNearbyEvents(sortedEvents);
 
         
           // fetch nearby groups
