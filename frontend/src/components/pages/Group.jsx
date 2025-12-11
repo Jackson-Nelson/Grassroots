@@ -145,7 +145,7 @@ export default function GroupPage() {
   // EDITING THE GROUP PAGE
   const handleSave = async () => {
     try {
-      const response = await fetch(`${apiURL}/group/${groupId}`, {
+      const response = await fetch(`${apiURL}/groups/${groupId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
