@@ -38,6 +38,8 @@ CREATE TABLE groups (
     is_private BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    contact_email VARCHAR(255),
+    contact_phone VARCHAR(20),
     PRIMARY KEY (group_id),
     FOREIGN KEY (creator_id) REFERENCES users(user_id) ON DELETE CASCADE,
     CONSTRAINT group_name_length CHECK (LENGTH(name) >= 3)

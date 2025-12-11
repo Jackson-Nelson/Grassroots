@@ -367,44 +367,57 @@ export default function GroupPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Group Info Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg p-6 shadow-md">
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                  <Users className="w-7 h-7 text-green-600" />
-                  {selectedGroup.name}
-                </h1>
-                <p className="text-gray-600 text-sm">{selectedGroup.description}</p>
-              </div>
-
-              {selectedGroup.tags && selectedGroup.tags.length > 0 && (
+              <div className="bg-white rounded-lg p-6 shadow-md">
                 <div className="mb-6">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Tags:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedGroup.tags.map((tag, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+                    <Users className="w-7 h-7 text-green-600" />
+                    {selectedGroup.name}
+                  </h1>
+                  <p className="text-gray-600 text-sm mb-3">{selectedGroup.description}</p>
+                  
+                  {/* Contact Us section - added right under description */}
+                  {selectedGroup.contact_email || selectedGroup.contact_phone ? (
+                    <div className="mb-4">
+                      <p className="text-sm font-medium text-gray-700 mb-1">Contact Us</p>
+                      {selectedGroup.contact_email && (
+                        <p className="text-sm text-gray-600">{selectedGroup.contact_email}</p>
+                      )}
+                      {selectedGroup.contact_phone && (
+                        <p className="text-sm text-gray-600">{selectedGroup.contact_phone}</p>
+                      )}
+                    </div>
+                  ) : null}
                 </div>
-              )}
-
-              {selectedGroup.members.length > 0 && (
-                <div className="mb-6">
-                  <p className="text-sm font-medium text-gray-700 mb-3">
-                    Members ({selectedGroup.members.length}):
-                  </p>
-                  <div className="space-y-2">
-                    {selectedGroup.members.map((member, idx) => (
-                      <div key={idx} className="px-3 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        {member.username}
-                      </div>
-                    ))}
+                
+                {selectedGroup.tags && selectedGroup.tags.length > 0 && (
+                  <div className="mb-6">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Tags:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedGroup.tags.map((tag, idx) => (
+                        <span key={idx} className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-
+                )}
+              
+                {selectedGroup.members.length > 0 && (
+                  <div className="mb-6">
+                    <p className="text-sm font-medium text-gray-700 mb-3">
+                      Members ({selectedGroup.members.length}):
+                    </p>
+                    <div className="space-y-2">
+                      {selectedGroup.members.map((member, idx) => (
+                        <div key={idx} className="px-3 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          {member.username}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              
               {isLoggedOut() ?
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Sign in to join groups!
